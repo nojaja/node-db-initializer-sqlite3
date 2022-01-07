@@ -2,8 +2,7 @@
 Initialize DB schema and tables very quickly. and Available with the webpack plugin.
 
 
-### Building the database in node.js
-* Writing the configuration
+## Writing the configuration
 ```
 {
     "data": [
@@ -24,9 +23,9 @@ Initialize DB schema and tables very quickly. and Available with the webpack plu
     ]
 }
 ```
- ** csv format
-  You can write in the handlebar template format
-  Explain the structure of parameter
+  ### csv format
+  You can write in the handlebar template format  
+  #### Explain the structure of parameter
   ```
   {
     table: iterator.tableName,
@@ -34,12 +33,13 @@ Initialize DB schema and tables very quickly. and Available with the webpack plu
     }
 
   ```
-  Header name Format rule
+  #### Header name Format rule
   ```
     replace(/[\n\r\s\&]/g, '') // a&b → ab
     replace(/\(.+\)/g, '')     // a(b) → ab
   ```
 
+## Building the database in node.js
 * Use code like this to build your database.
 ```
 const fs = require('fs')
@@ -63,7 +63,7 @@ main();
 
 
 
-### Building the database in webpack.config.js
+## Building the database in webpack.config.js
 ```
 const webpack = require('webpack')
 const dbinit  = require('node-db-initializer-sqlite3')
