@@ -1,0 +1,27 @@
+{
+  "name": "db-initializer-sqlite3",
+  "version": "1.0.0",
+  "description": "Initialize DB schema and tables very quickly. and Available with the webpack plugin.",
+  "main": "src/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nojaja/node-db-initializer-sqlite3.git"
+  },
+  "author": "nojaja <free.riccia@gmail.com> (https://github.com/nojaja)",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/nojaja/node-db-initializer-sqlite3/issues"
+  },
+  "homepage": "https://github.com/nojaja/node-db-initializer-sqlite3#readme",
+  "dependencies": {
+    "csv-parse": "^5.0.4",
+    "handlebars": "^4.7.7",
+    "sql.js": "^1.6.1"
+  },
+  "devDependencies": {
+    "cross-env": "^7.0.3"
+  }
+}
