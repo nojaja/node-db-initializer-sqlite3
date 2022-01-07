@@ -3,7 +3,43 @@ Initialize DB schema and tables very quickly. and Available with the webpack plu
 
 
 ### Building the database in node.js
-*
+* Writing the configuration
+```
+{
+    "data": [
+        {
+            "type": "sql",
+            "sql": "CREATE TABLE hello (a int, b char);"
+        },
+        {
+            "type": "sql",
+            "file": "/tests/CREATE_TABLE.sql"
+        },
+        {
+            "type": "csv",
+            "table": "HOGE",
+            "sql": "INSERT INTO {{table}} VALUES ({{{values.ProcessIdentifier}}},{{{values.LEVEL}}},{{{values.PARENT}}},{{{values.Process}}},{{{values.Category}}},{{{values.OriginalProcessIdentifier}}},{{{values.ExtendedDescription}}},'',{{{values.BriefDescription}}},{{{values.Domain}}},{{{values.VerticalGroup}}},{{{values.MaturityLevel}}},{{{values.Status}}} )",
+            "file": "/tests/HOGE.csv"
+        }
+    ]
+}
+```
+ ** csv format
+  You can write in the handlebar template format
+  Explain the structure of parameter
+  ```
+  {
+    table: iterator.tableName,
+    values: [Formatted CSV Header name]
+    }
+
+  ```
+  Header name Format rule
+  ```
+    replace(/[\n\r\s\&]/g, '') // a&b → ab
+    replace(/\(.+\)/g, '')     // a(b) → ab
+  ```
+
 * Use code like this to build your database.
 ```
 const fs = require('fs')
@@ -39,7 +75,7 @@ module.exports = {
         [
             {
                 from: 'assets/datas/*.json',
-                to: dist+"/assets/[name].db.gz",
+                to: dist+"/assets/[name].db",
                 transform(content, absoluteFrom) {
                   return dbinit.init(require(absoluteFrom)).then(function (savedata) {
                           return savedata;
