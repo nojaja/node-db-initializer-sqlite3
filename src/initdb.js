@@ -7,6 +7,7 @@ import * as path from 'path'
 import initSqlJs from "sql.js/dist/sql-wasm.js";
 import { parse } from 'csv-parse/sync'
 import Handlebars from "handlebars";
+import { Console } from 'console';
 
 Handlebars.registerHelper('notEmpty', function (arg1, options) {
   return (arg1 && arg1 != "''") ? options.fn(this) : options.inverse(this);
@@ -27,10 +28,10 @@ export class Initdb {
         // Load the db  
         const db = (datafile_url) ? new SQL.Database(new Uint8Array(fs.readFileSync(datafile_url))) : new SQL.Database();
         for (const iterator of settings.data || []) {
+          console.log("Action",iterator.type)
           if (iterator.type === 'sql' && iterator.sql) {
             try {
               const res = db.exec(iterator.sql)
-              console.log(res)
             } catch (e) {
               console.error(iterator, e.message);
             }
@@ -38,9 +39,8 @@ export class Initdb {
 
           if (iterator.type === 'sql' && iterator.file) {
             try {
-              const sqlPath = path.normalize(process.cwd() + iterator.file).replace(/\\/g, "/")
+              const sqlPath = path.normalize(path.join(settings.workspace,iterator.file)).replace(/\\/g, "/")
               const sql = fs.readFileSync(sqlPath, "utf8");
-
               try {
                 const res = db.run(sql)
               } catch (e) {
@@ -53,10 +53,10 @@ export class Initdb {
 
           if (iterator.type === 'csv' && iterator.file) {
             try {
-              const dataPath = path.normalize(process.cwd() + iterator.file).replace(/\\/g, "/")
+              const dataPath = path.normalize(path.join(settings.workspace,iterator.file)).replace(/\\/g, "/")
               const data = fs.readFileSync(dataPath, "utf8");
 
-              const preparesTemplate = handlebars.compile(iterator.sql);
+              const preparesTemplate = Handlebars.compile(iterator.sql);
               const records = parse(data, {
                 columns: true,
                 skip_empty_lines: true

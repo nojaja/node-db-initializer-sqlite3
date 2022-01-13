@@ -2,9 +2,9 @@
   "name": "db-initializer-sqlite3",
   "version": "1.0.0",
   "description": "Initialize DB schema and tables very quickly. and Available with the webpack plugin.",
-  "main": "src/index.js",
+  "main": "src/initdb.js",
   "bin": {
-    "db-initializer-sqlite3": "src/index.js"
+    "db-initializer-sqlite3": "dist/initdb.bundle.js"
   },
   "scripts": {
     "postinstall": "patch-package",
