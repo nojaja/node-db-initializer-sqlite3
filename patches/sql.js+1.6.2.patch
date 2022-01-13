@@ -1,0 +1,26 @@
+diff --git a/node_modules/sql.js/dist/sql-wasm-debug.js b/node_modules/sql.js/dist/sql-wasm-debug.js
+index d4e3f23..b3b7a1c 100644
+--- a/node_modules/sql.js/dist/sql-wasm-debug.js
++++ b/node_modules/sql.js/dist/sql-wasm-debug.js
+@@ -1420,7 +1420,7 @@ readAsync = function readAsync(filename, onload, onerror) {
+ 
+   arguments_ = process['argv'].slice(2);
+ 
+-  if (typeof module !== 'undefined') {
++  if (module) {
+     module['exports'] = Module;
+   }
+ 
+diff --git a/node_modules/sql.js/dist/sql-wasm.js b/node_modules/sql.js/dist/sql-wasm.js
+index 980a959..2c97228 100644
+--- a/node_modules/sql.js/dist/sql-wasm.js
++++ b/node_modules/sql.js/dist/sql-wasm.js
+@@ -91,7 +91,7 @@ this.Wa={},this.handleError(m(this.db)),ua("/"+this.filename),this.db=null)};c.p
+ D=Ac(O);O=Cc(O);for(var wb=new Uint8Array(D),Aa=0;Aa<D;Aa+=1)wb[Aa]=y[O+Aa];D=wb}else D=null;ja.push(D)}try{G=l.apply(null,ja)}catch(Kc){tb(p,Kc,-1);return}switch(typeof G){case "boolean":Hc(p,G?1:0);break;case "number":Ec(p,G);break;case "string":Fc(p,G,-1,-1);break;case "object":null===G?sb(p):null!=G.length?(z=na(G),Gc(p,z,G.length,-1),oa(z)):tb(p,"Wrong API use : tried to return a value of an unknown type ("+G+").",-1);break;default:sb(p)}});this.Wa[h]=q;this.handleError(yc(this.db,h,l.length,
+ 1,0,q,0,0,0));return this};e.Database=c};var wa={},B;for(B in e)e.hasOwnProperty(B)&&(wa[B]=e[B]);var xa="./this.program",ya="object"===typeof window,za="function"===typeof importScripts,Ba="object"===typeof process&&"object"===typeof process.versions&&"string"===typeof process.versions.node,E="",Ca,Da,Ea,Fa,Ga;
+ if(Ba)E=za?require("path").dirname(E)+"/":__dirname+"/",Ca=function(a,b){Fa||(Fa=require("fs"));Ga||(Ga=require("path"));a=Ga.normalize(a);return Fa.readFileSync(a,b?null:"utf8")},Ea=function(a){a=Ca(a,!0);a.buffer||(a=new Uint8Array(a));a.buffer||F("Assertion failed: undefined");return a},Da=function(a,b,c){Fa||(Fa=require("fs"));Ga||(Ga=require("path"));a=Ga.normalize(a);Fa.readFile(a,function(d,f){d?c(d):b(f.buffer)})},1<process.argv.length&&(xa=process.argv[1].replace(/\\/g,"/")),process.argv.slice(2),
+-"undefined"!==typeof module&&(module.exports=e),e.inspect=function(){return"[Emscripten Module object]"};else if(ya||za)za?E=self.location.href:"undefined"!==typeof document&&document.currentScript&&(E=document.currentScript.src),E=0!==E.indexOf("blob:")?E.substr(0,E.lastIndexOf("/")+1):"",Ca=function(a){var b=new XMLHttpRequest;b.open("GET",a,!1);b.send(null);return b.responseText},za&&(Ea=function(a){var b=new XMLHttpRequest;b.open("GET",a,!1);b.responseType="arraybuffer";b.send(null);return new Uint8Array(b.response)}),
++module&&(module.exports=e),e.inspect=function(){return"[Emscripten Module object]"};else if(ya||za)za?E=self.location.href:"undefined"!==typeof document&&document.currentScript&&(E=document.currentScript.src),E=0!==E.indexOf("blob:")?E.substr(0,E.lastIndexOf("/")+1):"",Ca=function(a){var b=new XMLHttpRequest;b.open("GET",a,!1);b.send(null);return b.responseText},za&&(Ea=function(a){var b=new XMLHttpRequest;b.open("GET",a,!1);b.responseType="arraybuffer";b.send(null);return new Uint8Array(b.response)}),
+ Da=function(a,b,c){var d=new XMLHttpRequest;d.open("GET",a,!0);d.responseType="arraybuffer";d.onload=function(){200==d.status||0==d.status&&d.response?b(d.response):c()};d.onerror=c;d.send(null)};var Ha=e.print||console.log.bind(console),H=e.printErr||console.warn.bind(console);for(B in wa)wa.hasOwnProperty(B)&&(e[B]=wa[B]);wa=null;e.thisProgram&&(xa=e.thisProgram);var Ia=[],Ja;function sa(a){Ja.delete(J.get(a));Ia.push(a)}
+ function va(a){if(!Ja){Ja=new WeakMap;for(var b=0;b<J.length;b++){var c=J.get(b);c&&Ja.set(c,b)}}if(Ja.has(a))a=Ja.get(a);else{if(Ia.length)b=Ia.pop();else{try{J.grow(1)}catch(g){if(!(g instanceof RangeError))throw g;throw"Unable to grow wasm table. Set ALLOW_TABLE_GROWTH.";}b=J.length-1}try{J.set(b,a)}catch(g){if(!(g instanceof TypeError))throw g;if("function"===typeof WebAssembly.Function){var d={i:"i32",j:"i64",f:"f32",d:"f64"},f={parameters:[],results:[]};for(c=1;4>c;++c)f.parameters.push(d["viii"[c]]);
+ c=new WebAssembly.Function(f,a)}else{d=[1,0,1,96];f={i:127,j:126,f:125,d:124};d.push(3);for(c=0;3>c;++c)d.push(f["iii"[c]]);d.push(0);d[1]=d.length-2;c=new Uint8Array([0,97,115,109,1,0,0,0].concat(d,[2,7,1,1,101,1,102,0,0,7,5,1,1,102,0,0]));c=new WebAssembly.Module(c);c=(new WebAssembly.Instance(c,{e:{f:a}})).exports.f}J.set(b,c)}Ja.set(a,b);a=b}return a}var Ka;e.wasmBinary&&(Ka=e.wasmBinary);var noExitRuntime=e.noExitRuntime||!0;"object"!==typeof WebAssembly&&F("no native wasm support detected");

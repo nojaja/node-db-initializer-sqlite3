@@ -1,72 +1,41 @@
-const fs = require('fs')
-const initSqlJs = require('sql.js')
-const {parse} = require('csv-parse/sync')
-const handlebars = require('handlebars')
 
-handlebars.registerHelper('notEmpty', function(arg1, options) {
-  return ( arg1 && arg1!="''" ) ? options.fn(this) : options.inverse(this);
-});
+const { Command } = require('commander')
+import * as fs from 'fs'
+import * as path from 'path'
+import Initdb from './initdb.js'
+const program = new Command();
+program.version('0.0.1');
+
+program
+  .option('-d, --debug', 'output extra debugging')
+  .option('-c, --config <type>', 'config file path')
+  .option('-i, --input <type>', 'input db file path')
+  .option('-o, --output <type>', 'output db file path')
+
+program.parse(process.argv);
+
+const options = program.opts();
+if (options.debug) console.log(options);
+if (options.config) console.log(`config - ${options.config}`);
+if (options.input) console.log(`input - ${options.input}`);
+if (options.output) console.log(`output - ${options.output}`);
 
 
-module.exports.init = async function (settings) {
-  const _settings = settings || {}
-  return await initSqlJs().then(function (SQL) {
-    // Load the db  
-    const db = new SQL.Database();
-    for (const iterator of settings.data||[]) {
-      if(iterator.type==='sql' && iterator.sql){
-        try {
-          const res = db.exec(iterator.sql)
-          console.log(res)
-        } catch(e) {
-          console.error(iterator,e.message);
-        }
-      }
+const Initdb_promise = async function () {
+  return new Initdb()
+}()
 
-      if(iterator.type==='sql' && iterator.file){
-        try {
-          const sql = fs.readFileSync(process.cwd()+iterator.file, "utf8");
-          try {
-            const res = db.run(sql)
-          } catch(e) {
-            console.error(e.message,sql);
-          }
-        } catch(e) {
-          console.error(iterator,e.message);
-        }
-      }
 
-      if(iterator.type==='csv' && iterator.file){
-        try {
-          const data = fs.readFileSync(process.cwd()+iterator.file, "utf8");
-          const preparesTemplate = handlebars.compile(iterator.sql);
-          const records = parse(data, {
-            columns: true,
-            skip_empty_lines: true
-          })
-          for (const values of records) {
-            try {
-              const mod_values = Object.fromEntries(
-                Object.entries( values )
-                .map(([ _, value ] )  => [ _.replace(/[\n\r\s\&]/g, '').replace(/\(.+\)/g, ''), "'"+value.replace(/\'/g, "''").replace(/\r\n/g, "'||char(13, 10)||'").replace(/\n/g, "'||char(13, 10)||'").replace(/\t/g, "'||char(9)||'")+"'"])
-              )
-              const sql = preparesTemplate({ table: iterator.table, values: mod_values});
-              try {
-                const res = db.run(sql)
-              } catch(e) {
-                console.error(e.message,sql,mod_values,e);
-              }
-            } catch(e) {
-              console.error(e.message,values,e);
-            }
-          }
-        }
-        catch(e) {
-          console.error(iterator,e.message,e);
-        }
-      }
-    }
-    const content = db.export();
-    return content;
-  })
+const main = async () => {
+  const initdb = await Initdb_promise
+  const data = JSON.parse(fs.readFileSync(path.join(process.cwd(),options.config), "utf8"));
+  const content = await initdb.init(data,options.input);
+  
+  async function save(savedata) {
+      fs.writeFileSync(options.output, savedata);
+  }
+
+  await save(content)
 }
+main();
+
