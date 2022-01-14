@@ -64,8 +64,12 @@ configuration.json
   ```
 
 ## Building the database in node.js
-The ```Initdb``` module provides utilities for Initialize DB schema and tables. It can be accessed using:
+The ```Initdb``` module provides utilities for Initialize DB schema and tables.
 
+Install with npm package manager:
+```npm install db-initializer-sqlite3```
+
+Load this library as follows:
 ```
 const Initdb = require('node-db-initializer-sqlite3')
 const initdb = new Initdb()

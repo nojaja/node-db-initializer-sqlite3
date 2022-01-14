@@ -46,8 +46,6 @@ jobs:
     - name: Zip artifacts
       run: |
         cd dist
-        pwd
-        ls
         zip -r artifacts.zip bin/
 
     - name: Create release
