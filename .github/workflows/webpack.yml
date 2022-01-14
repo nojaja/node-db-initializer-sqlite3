@@ -26,3 +26,54 @@ jobs:
       run: |
         npm ci
         npm run build
+        
+    - name: Create artifact dir
+      run: |
+        cd dist
+        mkdir -p artifacts
+        
+    - name: Zip artifacts
+      run: |
+        cd dist/artifacts
+        zip -r artifacts.zip exec/
+
+    - name: Create release
+      id: create_release
+      uses: actions/create-release@v1.0.0
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ github.ref }}
+        release_name: Release ${{ github.ref }}
+        body: |
+          Changes in this Release
+          - First Change
+          - Second Change
+        draft: false
+        prerelease: false
+
+    - name: Upload Release Asset
+      id: upload-release-asset-linux
+      uses: actions/upload-release-asset@v1.0.2
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./dist/artifacts/artifacts.zip
+        asset_name: winexe.zip
+        asset_content_type: application/zip
+
+  publish-npm:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
+        with:
+          node-version: '16.x'
+          registry-url: https://registry.npmjs.org/
+      - run: npm ci
+      - run: npm run build
+      - run: npm publish
+        env:
+          NODE_AUTH_TOKEN: ${{secrets.npm_token}}
