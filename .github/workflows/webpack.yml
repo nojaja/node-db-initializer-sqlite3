@@ -52,9 +52,9 @@ jobs:
         
     - name: Zip artifacts
       run: |
-        cd dist/artifacts
-        ls dist/bin/
-        zip -r artifacts.zip dist/bin/
+        pwd
+        ls
+        zip -r artifacts.zip bin/
 
     - name: Create release
       id: create_release
