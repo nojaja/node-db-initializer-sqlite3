@@ -3,36 +3,60 @@ Initialize DB schema and tables very quickly. and Available with the webpack plu
 
 
 ## Writing the configuration
+
+## actions
+| action | param   | description          |
+|--------|---------|----------------------|
+| Execute-SQL | sql : {A string containing some SQL-text to execute} | Execute an SQL query, and returns the result. |
+| Execute-SQL | file : {A path to a SQL-text-file. If a URL is provided, it must use the file: protocol.} | Synchronously reads and execute the entire SQL-text of a file. Reference vthe relative path to ```file``` based on the configuration-file path directory. |
+| Import-CSV | sql : {A string containing some SQL-templates to execute}<br />file : {A path to a CSV-file. If a URL is provided, it must use the file: protocol. } | Synchronously reads and execute the entire CSV-text of a file. SQL-templates is compatible with Handlebars templates. Reference vthe relative path to ```file``` based on the configuration-file path directory.|
+
+
+## Example 
+configuration.json 
 ```
 {
+    "workspace": [workspace directory]
     "data": [
         {
-            "type": "sql",
+            "action": "Execute-SQL",
             "sql": "CREATE TABLE hello (a int, b char);"
         },
         {
-            "type": "sql",
-            "file": "/tests/CREATE_TABLE.sql"
+            "action": "Execute-SQL",
+            "file": "/CREATE_TABLE.sql"
         },
         {
-            "type": "csv",
-            "table": "HOGE",
-            "sql": "INSERT INTO {{table}} VALUES ({{{values.ProcessIdentifier}}},{{{values.LEVEL}}},{{{values.PARENT}}},{{{values.Process}}},{{{values.Category}}},{{{values.OriginalProcessIdentifier}}},{{{values.ExtendedDescription}}},'',{{{values.BriefDescription}}},{{{values.Domain}}},{{{values.VerticalGroup}}},{{{values.MaturityLevel}}},{{{values.Status}}} )",
-            "file": "/tests/HOGE.csv"
+            "action": "Import-CSV",
+            "sql": "INSERT INTO HOGE VALUES ({{{values.ProcessIdentifier}}},{{{values.LEVEL}}},{{{values.PARENT}}},{{{values.Process}}},{{{values.Category}}},{{{values.OriginalProcessIdentifier}}},{{{values.ExtendedDescription}}},'',{{{values.BriefDescription}}},{{{values.Domain}}},{{{values.VerticalGroup}}},{{{values.MaturityLevel}}},{{{values.Status}}} )",
+            "file": "/HOGE.csv"
         }
     ]
 }
 ```
-  ### csv format
-  You can write in the handlebar template format  
-  #### Explain the structure of parameter
+  ### CSV-file format
+  SQL-templates is compatible with Handlebars templates.
+  #### Explain the structure of the Handlebars input object.
   ```
   {
-    table: iterator.tableName,
     values: [Formatted CSV Header name]
-    }
-
+  }
   ```
+  ##### Example 
+  configuration.json 
+  ```SQL-templates
+  "sql": "INSERT INTO HOGE VALUES ({{{values.ProcessIdentifier}}},{{{values.LEVEL}}})"
+  ```
+  input csv
+  ```Example.csv
+  Process,Process Identifier,LEVEL
+  A,B,C
+  ```
+  result
+  ```
+  INSERT INTO HOGE VALUES ('B','C')
+  ```
+
   #### Header name Format rule
   ```
     replace(/[\n\r\s\&]/g, '') // a&b → ab
@@ -40,27 +64,38 @@ Initialize DB schema and tables very quickly. and Available with the webpack plu
   ```
 
 ## Building the database in node.js
-* Use code like this to build your database.
+The ```Initdb``` module provides utilities for Initialize DB schema and tables. It can be accessed using:
+
+```
+const Initdb = require('node-db-initializer-sqlite3')
+const initdb = new Initdb()
+```
+
+### ```dbinit.init(settings[, dbfile_path])```
+
+* `settings` {jsonObject} configuration.json data
+* `dbfile_path` {string} load DB data
+* Returns: {Promise} Export the database to an Uint8Array containing the SQLite database file
+
+####  Use code like this to build your database.
 ```
 const fs = require('fs')
-const dbinit  = require('node-db-initializer-sqlite3')
+const Initdb  = require('node-db-initializer-sqlite3')
 
 async function main() {
-    //dbinit.init(
-    //    'DATABASE_PATH.db',
-    //     require('PATH_TO_CONFIGURATION.json')
-    //)
 
-    const content = await dbinit.init(require('PATH_TO_CONFIGURATION.json') );
+    const initdb = new Initdb()
+    const configdata = require('PATH_TO_CONFIGURATION.json')
+    configdata.workspace = process.cwd()
+    const content = await dbinit.init(configdata)
     
     async function save(content) {
-        fs.writeFileSync('DATABASE_PATH.db', content);
+        fs.writeFileSync('DATABASE_PATH.db', content)
     }
     await save(content)
 }
-main();
+main()
 ```
-
 
 
 ## Building the database in webpack.config.js
@@ -90,3 +125,39 @@ module.exports = {
   ]
 }
 ```
+
+## Building the database in exe
+```
+db-initializer-sqlite3.exe -c \tests\test.json -o test.db   
+```
+
+
+
+## Development
+1. init
+```sh
+$ npm install
+```
+
+2. build
+```
+npm run build && node dist\index.bundle.js -c \tests\test.json -o test.db
+```
+
+3. test 
+```
+cd tests && node test.js && cd ..
+```
+
+4. bundle test 
+```
+node dist\index.bundle.js -c \tests\test.json -o test.db
+```
+
+5. exe test 
+```
+dist\db-initializer-sqlite3.exe -c \tests\test.json -o test.db
+```
+
+## License
+Licensed under the [MIT](LICENSE) License.

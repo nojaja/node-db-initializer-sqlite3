@@ -15,10 +15,13 @@ module.exports = {
     'index': './index.js'
   },
   output: {
-    globalObject: 'self',
+    globalObject: 'this',
     filename: './[name].bundle.js',
     sourceMapFilename: './map/[id].[chunkhash].js.map',
     chunkFilename: './chunk/[id].[chunkhash].js',
+    library: 'Initdb', //ここがnewするときの名前になる
+    libraryExport: 'default',
+    libraryTarget: 'umd',
     path: dist
   },
   module: {

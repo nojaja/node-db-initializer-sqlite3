@@ -20,14 +20,8 @@ if (options.config) console.log(`config - ${options.config}`);
 if (options.input) console.log(`input - ${options.input}`);
 if (options.output) console.log(`output - ${options.output}`);
 
-
-const Initdb_promise = async function () {
-  return new Initdb()
-}()
-
-
 const main = async () => {
-  const initdb = await Initdb_promise
+  const initdb = new Initdb()
   const configPath = path.normalize(path.join(process.cwd(),options.config)).replace(/\\/g, "/")
   const configdata = JSON.parse(fs.readFileSync(configPath, "utf8"));
   configdata.workspace = path.dirname(configPath)
