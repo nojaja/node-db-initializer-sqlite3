@@ -28,6 +28,7 @@ jobs:
         npm run build
         
   nexebuild:
+    needs: test
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
@@ -39,17 +40,20 @@ jobs:
 
     - name: Build
       run: |
+        ls
         npm ci
         npm run nexebuild
         
     - name: Create artifact dir
       run: |
         cd dist
+        ls
         mkdir -p artifacts
         
     - name: Zip artifacts
       run: |
         cd dist/artifacts
+        ls dist/bin/
         zip -r artifacts.zip dist/bin/
 
     - name: Create release
@@ -79,7 +83,7 @@ jobs:
         asset_content_type: application/zip
 
   publish-npm:
-    needs: build
+    needs: test
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
