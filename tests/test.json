@@ -6,12 +6,24 @@
         },
         {
             "action": "Execute-SQL",
+            "sql": "INSERT INTO hello VALUES (1,'aaaa');INSERT INTO hello VALUES (2,'bbbb');"
+        },
+        {
+            "action": "Execute-SQL",
             "file": "/CREATE_TABLE.sql"
         },
         {
             "action": "Import-CSV",
             "sql": "INSERT INTO HOGE VALUES ({{{values.ProcessIdentifier}}},{{{values.LEVEL}}},{{{values.PARENT}}},{{{values.Process}}},{{{values.Category}}},{{{values.OriginalProcessIdentifier}}},{{{values.ExtendedDescription}}},'',{{{values.BriefDescription}}},{{{values.Domain}}},{{{values.VerticalGroup}}},{{{values.MaturityLevel}}},{{{values.Status}}} )",
             "file": "/HOGE.csv"
+        },
+        {
+            "action": "Execute-SQL",
+            "sql": "SELECT * FROM HOGE;"
+        },
+        {
+            "action": "Execute-SQL",
+            "file": "/SELECT_TABLE.sql"
         }
     ]
 }
