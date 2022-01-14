@@ -79,7 +79,7 @@ jobs:
         asset_content_type: application/zip
 
   publish-npm:
-    needs: build
+    needs: test
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
