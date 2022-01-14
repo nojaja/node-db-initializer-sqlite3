@@ -1,0 +1,17 @@
+{
+    "data": [
+        {
+            "action": "Execute-SQL",
+            "sql": "CREATE TABLE babynames (`year` NUMERIC NOT NULL,`name` TEXT,`sex` TEXT NOT NULL,`count` NUMERIC NOT NULL,`rank_within_sex` NUMERIC NOT NULL,`per_100k_within_sex` FLOAT NOT NULL)"
+        },
+        {
+            "action": "Import-CSV",
+            "sql": "INSERT INTO babynames VALUES ({{{values.year}}},{{{values.name}}},{{{values.sex}}},{{{values.count}}},{{{values.rank_within_sex}}},{{{values.per_100k_within_sex}}})",
+            "file": "/test.csv"
+        },
+        {
+            "action": "Execute-SQL",
+            "sql": "SELECT * FROM babynames LIMIT 10;"
+        }
+    ]
+}

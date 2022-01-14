@@ -1,0 +1,18 @@
+{
+    "data": [
+        {
+            "action": "Export-CSV",
+            "sql": "SELECT * FROM babynames;",
+            "file": "/test.csv"
+        },
+        {
+            "action": "Execute-SQL",
+            "sql": "SELECT * FROM babynames LIMIT 10;"
+        },
+        {
+            "action": "Execute-SQL",
+            "sql": "select sql from sqlite_master where type='table';"
+        }
+        
+    ]
+}

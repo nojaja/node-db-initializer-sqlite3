@@ -10,7 +10,7 @@ Initialize DB schema and tables very quickly. and Available with the webpack plu
 | Execute-SQL | sql : {A string containing some SQL-text to execute} | Execute an SQL query, and returns the result. |
 | Execute-SQL | file : {A path to a SQL-text-file. If a URL is provided, it must use the file: protocol.} | Synchronously reads and execute the entire SQL-text of a file. Reference vthe relative path to ```file``` based on the configuration-file path directory. |
 | Import-CSV | sql : {A string containing some SQL-templates to execute}<br />file : {A path to a CSV-file. If a URL is provided, it must use the file: protocol. } | Synchronously reads and execute the entire CSV-text of a file. SQL-templates is compatible with Handlebars templates. Reference vthe relative path to ```file``` based on the configuration-file path directory.|
-
+| Export-CSV | sql : {A string containing some SQL-test to execute}<br />file : {A path to a CSV-file. If a URL is provided, it must use the file: protocol. } | ASynchronously write and execute the entire CSV-text of a file. Reference vthe relative path to ```file``` based on the configuration-file path directory.|
 
 ## Example 
 configuration.json 
@@ -30,6 +30,11 @@ configuration.json
             "action": "Import-CSV",
             "sql": "INSERT INTO HOGE VALUES ({{{values.ProcessIdentifier}}},{{{values.LEVEL}}},{{{values.PARENT}}},{{{values.Process}}},{{{values.Category}}},{{{values.OriginalProcessIdentifier}}},{{{values.ExtendedDescription}}},'',{{{values.BriefDescription}}},{{{values.Domain}}},{{{values.VerticalGroup}}},{{{values.MaturityLevel}}},{{{values.Status}}} )",
             "file": "/HOGE.csv"
+        },
+        {
+            "action": "Export-CSV",
+            "sql": "SELECT * FROM HOGE;",
+            "file": "/test.csv"
         }
     ]
 }
