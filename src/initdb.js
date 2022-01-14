@@ -1,14 +1,10 @@
 import * as fs from 'fs'
 import * as path from 'path'
 import * as Stream from 'stream'
-import initSqlJs from "sql.js/dist/sql-wasm.js";
+import initSqlJs from "sql.js/dist/sql-wasm.js"
 import { parse } from 'csv-parse'
 import { stringify } from 'csv-stringify'
-import Handlebars from "handlebars";
 
-Handlebars.registerHelper('notEmpty', function (arg1, options) {
-  return (arg1 && arg1 != "''") ? options.fn(this) : options.inverse(this);
-});
 
 export class Initdb {
   constructor(debug) {
@@ -50,123 +46,133 @@ export class Initdb {
         const db = (dbfile_path) ? new SQL.Database(new Uint8Array(fs.readFileSync(dbfile_path))) : new SQL.Database();
         for await (const iterator of settings.data || []) {
           console.log("Action ", iterator.action)
-          if (iterator.action === 'Execute-SQL' && iterator.sql) {
-            try {
-              const results = db.exec(iterator.sql)
-              instance.resultsprocessor(results)
-            } catch (e) {
-              if (instance.debug) {
-                console.error(e.message, iterator);
-              } else {
-                console.error(e.message, iterator.sql);
-              }
-            }
-          }
-
-          if (iterator.action === 'Execute-SQL' && iterator.file) {
-            try {
-              const sqlPath = path.normalize(path.join(settings.workspace, iterator.file)).replace(/\\/g, "/")
-              const sql = fs.readFileSync(sqlPath, "utf8");
+          try {
+            if (iterator.action === 'Execute-SQL' && iterator.sql) {
               try {
-                const results = db.exec(sql)
+                const results = db.exec(iterator.sql)
                 instance.resultsprocessor(results)
               } catch (e) {
                 if (instance.debug) {
-                  console.error(e.message, sql, iterator);
+                  console.error(e.message, iterator);
                 } else {
-                  console.error(e.message, sql);
+                  console.error(e.message, iterator.sql);
                 }
               }
-            } catch (e) {
-              if (instance.debug) {
-                console.error(e.message, iterator);
-              } else {
-                console.error(e.message);
-              }
             }
-          }
 
-          if (iterator.action === 'Export-CSV' && iterator.sql && iterator.file) {
-            const preparesTemplate = Handlebars.compile(iterator.sql);
-            const dataPath = path.normalize(path.join(settings.workspace, iterator.file)).replace(/\\/g, "/")
-            const writeStream = fs.createWriteStream(dataPath, "utf8")
-            const readableStream = new Stream.Readable({ objectMode: true })
-
-            try {
-              const stmt = db.prepare(iterator.sql)
-
-              const resultsStringify = stringify({
-                header: true,
-                columns: stmt.getColumnNames()
-              })
-
-              readableStream.pipe(resultsStringify).pipe(writeStream)
-              writeStream.on('finish', () => {
-                console.log('Export-CSV: finish write stream', dataPath)
-              }).on('error', (err) => {
-                console.log(err)
-              })
-
-              while (stmt.step()) readableStream.push(stmt.get());
-              readableStream.push(null)
-
-            } catch (e) {
-              if (instance.debug) {
-                console.error(e.message, iterator);
-              } else {
-                console.error(e.message, iterator.sql);
+            if (iterator.action === 'Execute-SQL' && iterator.file) {
+              try {
+                const sqlPath = path.normalize(path.join(settings.workspace, iterator.file)).replace(/\\/g, "/")
+                const sql = fs.readFileSync(sqlPath, "utf8");
+                try {
+                  const results = db.exec(sql)
+                  instance.resultsprocessor(results)
+                } catch (e) {
+                  if (instance.debug) {
+                    console.error(e.message, sql, iterator);
+                  } else {
+                    console.error(e.message, sql);
+                  }
+                }
+              } catch (e) {
+                if (instance.debug) {
+                  console.error(e.message, iterator);
+                } else {
+                  console.error(e.message);
+                }
               }
             }
 
-          }
-
-          if (iterator.action === 'Import-CSV' && iterator.file) {
-            const processFile = async () => {
-              const preparesTemplate = Handlebars.compile(iterator.sql);
+            if (iterator.action === 'Export-CSV' && iterator.sql && iterator.file) {
               const dataPath = path.normalize(path.join(settings.workspace, iterator.file)).replace(/\\/g, "/")
-              const parser = fs
-                .createReadStream(dataPath, "utf8")
-                .pipe(parse({
+              const writeStream = fs.createWriteStream(dataPath, "utf8")
+              const readableStream = new Stream.Readable({ objectMode: true })
+              try {
+                const stmt = db.prepare(iterator.sql)
+
+                const resultsStringify = stringify({
+                  header: true,
+                  columns: stmt.getColumnNames()
+                })
+
+                readableStream.pipe(resultsStringify).pipe(writeStream)
+                writeStream.on('finish', () => {
+                  console.log('Export-CSV: finish write stream', dataPath)
+                }).on('error', (err) => {
+                  console.log(err)
+                })
+
+                while (stmt.step()) readableStream.push(stmt.get());
+                readableStream.push(null)
+
+              } catch (e) {
+                if (instance.debug) {
+                  console.error(e.message, iterator);
+                } else {
+                  console.error(e.message, iterator.sql);
+                }
+              }
+
+            }
+
+            if (iterator.action === 'Import-CSV' && iterator.file) {
+              const processFile = async () => {
+                const dataPath = path.normalize(path.join(settings.workspace, iterator.file)).replace(/\\/g, "/")
+                const parser = parse({
                   // CSV options if any
                   columns: true,
                   skip_empty_lines: true
-                }));
-              for await (const record of parser) {
-                // Work with each record
-                try {
-                  const mod_values = Object.fromEntries(
-                    Object.entries(record)
-                      .map(([_, value]) => [_.replace(/[\n\r\s\&]/g, '').replace(/\(.+\)/g, ''), "'" + value.replace(/\'/g, "''").replace(/\r\n/g, "'||char(13, 10)||'").replace(/\n/g, "'||char(13, 10)||'").replace(/\t/g, "'||char(9)||'") + "'"])
-                  )
-                  const sql = preparesTemplate({ table: iterator.table, values: mod_values });
+                })
+                const readStream = fs.createReadStream(dataPath, "utf8")
+                readStream.pipe(parser)
+                const stmt = db.prepare(iterator.sql)
+                for await (const record of parser) {
+                  // Work with each record
                   try {
-                    const res = db.run(sql)
+                    const mod_values = Object.fromEntries(
+                      Object.entries(record)
+                        //[columnName , value]
+                        //.map(([_, value]) => [_.replace(/[\n\r\s\&]/g, '').replace(/\(.+\)/g, ''), "'" + value.replace(/\'/g, "''").replace(/\r\n/g, "'||char(13, 10)||'").replace(/\n/g, "'||char(13, 10)||'").replace(/\t/g, "'||char(9)||'") + "'"])
+                        //.map(([columnName, value]) => [columnName, value.replace(/\'/g, "''").replace(/\r\n/g, "'||char(13, 10)||'").replace(/\n/g, "'||char(13, 10)||'").replace(/\t/g, "'||char(9)||'")])
+                        .map(([columnName, value]) => ["$" + columnName.replace(/[\n\r\s\&]/g, '').replace(/\(.+\)/g, ''), value.replace(/\'/g, "''").replace(/\r\n/g, "'||char(13, 10)||'").replace(/\n/g, "'||char(13, 10)||'").replace(/\t/g, "'||char(9)||'")])
+                    )
+                    try {
+                      stmt.bind(mod_values);
+                      while (stmt.step()) console.log("stmt.get", stmt.get());
+                    } catch (e) {
+                      if (instance.debug) {
+                        console.error(e.message, sql, mod_values, e);
+                      } else {
+                        console.error(e.message, sql);
+                      }
+                    }
                   } catch (e) {
                     if (instance.debug) {
-                      console.error(e.message, sql, mod_values, e);
+                      console.error(e.message, record, e);
                     } else {
-                      console.error(e.message, sql);
+                      console.error(e.message, record);
                     }
                   }
-                } catch (e) {
-                  if (instance.debug) {
-                    console.error(e.message, record, e);
-                  } else {
-                    console.error(e.message, record);
-                  }
+                }
+                return
+              }
+              try {
+                const ret = await processFile()
+              }
+              catch (e) {
+                if (instance.debug) {
+                  console.error(iterator, e.message, e);
+                } else {
+                  console.error(iterator, e.message);
                 }
               }
-              return
             }
-            try {
-              const ret = await processFile()
-            }
-            catch (e) {
-              if (instance.debug) {
-                console.error(iterator, e.message, e);
-              } else {
-                console.error(e.message);
-              }
+
+          } catch (e) {
+            if (instance.debug) {
+              console.error(e.message, iterator, e);
+            } else {
+              console.error(e.message, iterator);
             }
           }
         }

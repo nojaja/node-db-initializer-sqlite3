@@ -9,8 +9,8 @@ Initialize DB schema and tables very quickly. and Available with the webpack plu
 |--------|---------|----------------------|
 | Execute-SQL | sql : {A string containing some SQL-text to execute} | Execute an SQL query, and returns the result. |
 | Execute-SQL | file : {A path to a SQL-text-file. If a URL is provided, it must use the file: protocol.} | Synchronously reads and execute the entire SQL-text of a file. Reference vthe relative path to ```file``` based on the configuration-file path directory. |
-| Import-CSV | sql : {A string containing some SQL-templates to execute}<br />file : {A path to a CSV-file. If a URL is provided, it must use the file: protocol. } | Synchronously reads and execute the entire CSV-text of a file. SQL-templates is compatible with Handlebars templates. Reference vthe relative path to ```file``` based on the configuration-file path directory.|
-| Export-CSV | sql : {A string containing some SQL-test to execute}<br />file : {A path to a CSV-file. If a URL is provided, it must use the file: protocol. } | ASynchronously write and execute the entire CSV-text of a file. Reference vthe relative path to ```file``` based on the configuration-file path directory.|
+| Import-CSV | sql : {A string containing some prepare SQL to execute}<br />file : {A path to a CSV-file. If a URL is provided, it must use the file: protocol. } | Synchronously reads and execute the entire CSV-text of a file. SQL-templates is compatible with SQLite BindParams. Reference vthe relative path to ```file``` based on the configuration-file path directory.|
+| Export-CSV | sql : {A string containing some SQL-text to execute}<br />file : {A path to a CSV-file. If a URL is provided, it must use the file: protocol. } | ASynchronously write and execute the entire CSV-text of a file. Reference vthe relative path to ```file``` based on the configuration-file path directory.|
 
 ## Example 
 configuration.json 
@@ -28,7 +28,7 @@ configuration.json
         },
         {
             "action": "Import-CSV",
-            "sql": "INSERT INTO HOGE VALUES ({{{values.ProcessIdentifier}}},{{{values.LEVEL}}},{{{values.PARENT}}},{{{values.Process}}},{{{values.Category}}},{{{values.OriginalProcessIdentifier}}},{{{values.ExtendedDescription}}},'',{{{values.BriefDescription}}},{{{values.Domain}}},{{{values.VerticalGroup}}},{{{values.MaturityLevel}}},{{{values.Status}}} )",
+            "sql": "INSERT INTO HOGE VALUES ($ProcessIdentifier,$LEVEL,$PARENT,$Process,$Category,$OriginalProcessIdentifier,$ExtendedDescription,'',$BriefDescription,$Domain,$VerticalGroup,$MaturityLevel,$Status)",
             "file": "/HOGE.csv"
         },
         {
@@ -40,17 +40,11 @@ configuration.json
 }
 ```
   ### CSV-file format
-  SQL-templates is compatible with Handlebars templates.
-  #### Explain the structure of the Handlebars input object.
-  ```
-  {
-    values: [Formatted CSV Header name]
-  }
-  ```
+  prepare SQL is compatible with SQLite BindParams.
   ##### Example 
   configuration.json 
   ```SQL-templates
-  "sql": "INSERT INTO HOGE VALUES ({{{values.ProcessIdentifier}}},{{{values.LEVEL}}})"
+  "sql": "INSERT INTO HOGE VALUES ($ProcessIdentifier,$LEVEL)"
   ```
   input csv
   ```Example.csv
@@ -62,7 +56,7 @@ configuration.json
   INSERT INTO HOGE VALUES ('B','C')
   ```
 
-  #### Header name Format rule
+  #### Rule to convert header name to BindParams
   ```
     replace(/[\n\r\s\&]/g, '') // a&b → ab
     replace(/\(.+\)/g, '')     // a(b) → ab
