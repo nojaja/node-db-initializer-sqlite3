@@ -40,18 +40,12 @@ jobs:
 
     - name: Build
       run: |
-        ls
         npm ci
         npm run nexebuild
         
-    - name: Create artifact dir
-      run: |
-        cd dist
-        ls
-        mkdir -p artifacts
-        
     - name: Zip artifacts
       run: |
+        cd dist
         pwd
         ls
         zip -r artifacts.zip bin/
@@ -78,7 +72,7 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./dist/artifacts/artifacts.zip
+        asset_path: ./dist/artifacts.zip
         asset_name: windows-x86.zip
         asset_content_type: application/zip
 
