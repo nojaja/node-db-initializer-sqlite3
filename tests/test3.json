@@ -6,7 +6,7 @@
         },
         {
             "action": "Import-CSV",
-            "sql": "INSERT INTO babynames VALUES ({{{values.year}}},{{{values.name}}},{{{values.sex}}},{{{values.count}}},{{{values.rank_within_sex}}},{{{values.per_100k_within_sex}}})",
+            "sql": "INSERT INTO babynames VALUES ($year,$name,$sex,$count,$rank_within_sex,$per_100k_within_sex)",
             "file": "/test.csv"
         },
         {

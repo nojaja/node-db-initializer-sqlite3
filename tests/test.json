@@ -14,7 +14,7 @@
         },
         {
             "action": "Import-CSV",
-            "sql": "INSERT INTO HOGE VALUES ({{{values.ProcessIdentifier}}},{{{values.LEVEL}}},{{{values.PARENT}}},{{{values.Process}}},{{{values.Category}}},{{{values.OriginalProcessIdentifier}}},{{{values.ExtendedDescription}}},'',{{{values.BriefDescription}}},{{{values.Domain}}},{{{values.VerticalGroup}}},{{{values.MaturityLevel}}},{{{values.Status}}} )",
+            "sql": "INSERT INTO HOGE VALUES ($ProcessIdentifier,$LEVEL,$PARENT,$Process,$Category,$OriginalProcessIdentifier,$ExtendedDescription,'',$BriefDescription,$Domain,$VerticalGroup,$MaturityLevel,$Status)",
             "file": "/HOGE.csv"
         },
         {

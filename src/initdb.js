@@ -141,9 +141,9 @@ export class Initdb {
                       while (stmt.step()) console.log("stmt.get", stmt.get());
                     } catch (e) {
                       if (instance.debug) {
-                        console.error(e.message, sql, mod_values, e);
+                        console.error(e.message, iterator.sql, mod_values, e);
                       } else {
-                        console.error(e.message, sql);
+                        console.error(e.message, iterator.sql);
                       }
                     }
                   } catch (e) {
