@@ -156,7 +156,7 @@ node dist\index.bundle.js -c \tests\test.json -o test.db
 
 5. exe test 
 ```
-dist\db-initializer-sqlite3.exe -c \tests\test.json -o test.db
+npm run nexebuild && dist\bin\db-initializer-sqlite3.exe -c \tests\test.json -o test.db
 ```
 
 ## License

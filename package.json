@@ -8,7 +8,8 @@
   },
   "scripts": {
     "postinstall": "patch-package",
-    "build": "cross-env NODE_OPTIONS=--max_old_space_size=2048 NODE_ENV=production ENVIRONMENT=node webpack && node ./nexe.build.js",
+    "build": "cross-env NODE_OPTIONS=--max_old_space_size=2048 NODE_ENV=production ENVIRONMENT=node webpack",
+    "nexebuild": "cross-env NODE_OPTIONS=--max_old_space_size=2048 NODE_ENV=production ENVIRONMENT=node webpack && node ./nexe.build.js",
     "test": "cross-env NODE_OPTIONS=--max_old_space_size=2048 NODE_ENV=development ENVIRONMENT=node webpack && node ./nexe.build.js && node --trace-warnings dist/index.bundle.js -c /tests/test.json -o test.db"
   },
   "repository": {

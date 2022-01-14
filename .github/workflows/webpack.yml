@@ -7,7 +7,7 @@ on:
     branches: [ main ]
 
 jobs:
-  build:
+  test:
     runs-on: ubuntu-latest
 
     strategy:
@@ -27,6 +27,21 @@ jobs:
         npm ci
         npm run build
         
+  nexebuild:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Use Node.js 16.x
+      uses: actions/setup-node@v1
+      with:
+        node-version: '16.x'
+
+    - name: Build
+      run: |
+        npm ci
+        npm run nexebuild
+        
     - name: Create artifact dir
       run: |
         cd dist
@@ -35,7 +50,7 @@ jobs:
     - name: Zip artifacts
       run: |
         cd dist/artifacts
-        zip -r artifacts.zip exec/
+        zip -r artifacts.zip dist/bin/
 
     - name: Create release
       id: create_release
@@ -60,7 +75,7 @@ jobs:
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
         asset_path: ./dist/artifacts/artifacts.zip
-        asset_name: winexe.zip
+        asset_name: windows-x86.zip
         asset_content_type: application/zip
 
   publish-npm:

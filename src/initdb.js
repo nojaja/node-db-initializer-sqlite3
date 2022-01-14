@@ -16,7 +16,7 @@ export class Initdb {
 /**
  * SQLiteの読み込み
  * ex. const content = await initdb.init(configdata,options.input);
- * @param {json} settings
+ * @param {jsonObject} settings
  * @param {string} dbfile_path filename or file descriptor
  * @returns {Promise} db Promise
  */
