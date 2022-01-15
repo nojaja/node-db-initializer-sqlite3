@@ -72,14 +72,14 @@ Install with npm package manager:
 
 Load this library as follows:  
 ```
-const Initdb = require('node-db-initializer-sqlite3')
+const Initdb = require('db-initializer-sqlite3')
 const initdb = new Initdb()
 ```
 
 Use code like this to build your database:
 ```
 const fs = require('fs')
-const Initdb  = require('node-db-initializer-sqlite3')
+const Initdb  = require('db-initializer-sqlite3')
 
 async function main() {
 
@@ -111,7 +111,7 @@ Install with npm package manager:
 Use code like this to build your database:
 ```
 const webpack = require('webpack')
-const dbinit  = require('node-db-initializer-sqlite3')
+const dbinit  = require('db-initializer-sqlite3')
 const CopyFilePlugin = require('copy-webpack-plugin')
 
 module.exports = {
