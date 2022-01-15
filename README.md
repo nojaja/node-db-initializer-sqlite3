@@ -25,17 +25,17 @@ Writing the configuration.json
         },
         {
             "action": "Execute-SQL",
-            "file": "/CREATE_TABLE.sql"
+            "file": "CREATE_TABLE.sql"
         },
         {
             "action": "Import-CSV",
             "sql": "INSERT INTO HOGE VALUES ($ProcessIdentifier,$LEVEL,$PARENT,$Process,$Category,$OriginalProcessIdentifier,$ExtendedDescription,'',$BriefDescription,$Domain,$VerticalGroup,$MaturityLevel,$Status)",
-            "file": "/HOGE.csv"
+            "file": "HOGE.csv"
         },
         {
             "action": "Export-CSV",
             "sql": "SELECT * FROM HOGE;",
-            "file": "/test.csv"
+            "file": "test.csv"
         }
     ]
 }
@@ -86,7 +86,7 @@ async function main() {
     const initdb = new Initdb()
     const configdata = require('PATH_TO_CONFIGURATION.json')
     configdata.workspace = process.cwd()
-    const content = await dbinit.init(configdata)
+    const content = await initdb.init(configdata)
     
     async function save(content) {
         fs.writeFileSync('DATABASE_PATH.db', content)
@@ -111,7 +111,8 @@ Install with npm package manager:
 Use code like this to build your database:
 ```
 const webpack = require('webpack')
-const dbinit  = require('db-initializer-sqlite3')
+const Initdb  = require('db-initializer-sqlite3')
+const initdb = new Initdb()
 const CopyFilePlugin = require('copy-webpack-plugin')
 
 module.exports = {
@@ -122,7 +123,7 @@ module.exports = {
                 from: 'assets/datas/*.json',
                 to: dist+"/assets/[name].db",
                 transform(content, absoluteFrom) {
-                  return dbinit.init(require(absoluteFrom)).then(function (savedata) {
+                  return initdb.init(require(absoluteFrom)).then(function (savedata) {
                           return savedata;
                         }
                     );

@@ -161,11 +161,12 @@ export class Initdb {
                     try {
                       //CSVデータの加工
                       //columnNameをBindParamsで利用可能な名称に変更
-                      //valueをSQLで扱えるようにエスケープ処理する
+                      //valueをSQLで扱えるようにエスケープ処理する ←不要
                       const mod_values = Object.fromEntries(
                         Object.entries(record)
                           //[columnName , value]
-                          .map(([columnName, value]) => ["$" + columnName.replace(/[\n\r\s\&]/g, '').replace(/\(.+\)/g, ''), value.replace(/\'/g, "''").replace(/\r\n/g, "'||char(13, 10)||'").replace(/\n/g, "'||char(13, 10)||'").replace(/\t/g, "'||char(9)||'")])
+                          //.map(([columnName, value]) => ["$" + columnName.replace(/[\n\r\s\&]/g, '').replace(/\(.+\)/g, ''), value.replace(/\'/g, "''").replace(/\r\n/g, "'||char(13, 10)||'").replace(/\n/g, "'||char(13, 10)||'").replace(/\t/g, "'||char(9)||'")])
+                          .map(([columnName, value]) => ["$" + columnName.replace(/[\n\r\s\&]/g, '').replace(/\(.+\)/g, ''), value])
                       )
                       try {
                         //SQLの実行

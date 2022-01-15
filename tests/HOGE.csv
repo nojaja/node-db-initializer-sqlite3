@@ -1,4 +1,5 @@
 Process,Category,Process Identifier,Original Process Identifier,Extended Description,Brief Description,Domain,Vertical Group,Maturity Level,Status,LEVEL,PARENT,Status2
 Market Strategy & Policy,Process,1.1.1,1.2.1.1,"Market Strategy & Policy processes, Market Analysis.",Enable the development,Market Sales Domain,Strategy Management,4,Released,2,1.1,1
-Gather & Analyze Market Information,Task,1.1.1.1,1.2.1.1.1,Gather & Analyze Market are managed within these processes.,Research market information,Market Sales Domain,Strategy Management,4,Released,3,1.1.1,1
+Gather & Analyze Market Information,Task,1.1.1.1,1.2.1.1.1,"Gather & Analyze Market 
+are managed within these processes.",Research market information,Market Sales Domain,Strategy Management,4,Released,3,1.1.1,1
 Gather Market Information,Task,1.1.1.1.1,1.2.1.1.1.1,Gather Market information.,market information,Market Sales Domain,Strategy Management,4,Released,4,1.1.1.1,1
