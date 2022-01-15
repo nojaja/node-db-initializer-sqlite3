@@ -1,0 +1,9 @@
+{
+    "data": [
+        {
+            "action": "Export-CSV",
+            "sql": "SELECT * FROM babynames;",
+            "file": "../test.csv"
+        }
+    ]
+}

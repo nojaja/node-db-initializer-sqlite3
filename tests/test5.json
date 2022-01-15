@@ -1,0 +1,22 @@
+{
+    "data": [
+        {
+            "action": "Execute-SQL",
+            "sql": "select sql from sqlite_master where type='table';"
+        },
+        {
+            "action": "Export-CSV",
+            "sql": "SELECT * FROM ad_address;",
+            "file": "../ad_address.csv"
+        },
+        {
+            "action": "Execute-SQL",
+            "sql": "CREATE TABLE `ad_address2` ( `id` INTEGER NOT NULL DEFAULT 0,`ken_id` INTEGER DEFAULT NULL,`city_id` INTEGER DEFAULT NULL,`town_id` INTEGER DEFAULT NULL,`zip` TEXT DEFAULT NULL,`office_flg` INTEGER DEFAULT NULL,`delete_flg` INTEGER DEFAULT NULL,`ken_name` TEXT DEFAULT NULL,`ken_furi` TEXT DEFAULT NULL,`city_name` TEXT DEFAULT NULL,`city_furi` TEXT DEFAULT NULL,`town_name` TEXT DEFAULT NULL,`town_furi` TEXT DEFAULT NULL,`town_memo` TEXT DEFAULT NULL,`kyoto_street` TEXT DEFAULT NULL,`block_name` TEXT DEFAULT NULL,`block_furi` TEXT DEFAULT NULL,`memo` TEXT DEFAULT NULL,`office_name` TEXT DEFAULT NULL,`office_furi` TEXT DEFAULT NULL,`office_address` TEXT DEFAULT NULL,`new_id` INTEGER DEFAULT NULL,PRIMARY KEY (`id`));"
+        },
+        {
+            "action": "Import-CSV",
+            "sql": "INSERT INTO ad_address2 VALUES ($id,$ken_id,$city_id,$town_id,$zip,$office_flg,$delete_flg,$ken_name,$ken_furi,$city_name,$city_furi,$town_name,$town_furi,$town_memo,$kyoto_street,$block_name,$block_furi,$memo,$office_name,$office_furi,$office_address,$new_id)",
+            "file": "../ad_address.csv"
+        }
+    ]
+}

@@ -1,5 +1,5 @@
 import * as fs from 'fs'
-import * as path from 'path'
+import * as Path from 'path'
 import * as Stream from 'stream'
 import initSqlJs from "sql.js/dist/sql-wasm.js"
 import { parse } from 'csv-parse'
@@ -7,11 +7,21 @@ import { stringify } from 'csv-stringify'
 
 
 export class Initdb {
+  /**
+   * constructor
+   * @param {bool} debug
+   */
   constructor(debug) {
     this.debug = debug || false
   }
 
-  resultsprocessor(results) {
+
+  normalizePath(targetPath,basePath) {
+    const _basePath = basePath || process.cwd()
+    return Path.normalize((Path.isAbsolute(targetPath)) ? targetPath : Path.join(_basePath, targetPath)).replace(/\\/g, "/")
+  }
+
+  resultsPrint(results) {
     if (results) {
       for (const result of results) {
         console.log("Result ")
@@ -32,25 +42,30 @@ export class Initdb {
   /**
    * SQLiteの読み込み
    * ex. const content = await initdb.init(configdata,options.input);
-   * @param {jsonObject} settings
+   * @param {jsonObject} config
    * @param {string} dbfile_path filename or file descriptor
    * @returns {Promise} db Promise
    */
-  async init(settings, dbfile_path) {
+  async init(config, dbfile_path) {
     const instance = this
     try {
-      const _settings = settings || {}
-      if (!settings.workspace) settings.workspace = process.cwd()
+      //各種fileの相対パスの基準となるworkspaceが指定されてない場合はCurrent directoryを設定する
+      if (!config.workspace) config.workspace = process.cwd()
+
       return await initSqlJs().then(async function (SQL) {
         // Load the db  
         const db = (dbfile_path) ? new SQL.Database(new Uint8Array(fs.readFileSync(dbfile_path))) : new SQL.Database();
-        for await (const iterator of settings.data || []) {
+
+        //configのdataに定義されている処理を上から順番に実行する
+        for await (const iterator of config.data || []) {
           console.log("Action ", iterator.action)
           try {
+
+            //Execute-SQLの処理、configのdataに定義されているSQLを実行する
             if (iterator.action === 'Execute-SQL' && iterator.sql) {
               try {
                 const results = db.exec(iterator.sql)
-                instance.resultsprocessor(results)
+                instance.resultsPrint(results)
               } catch (e) {
                 if (instance.debug) {
                   console.error(e.message, iterator);
@@ -60,13 +75,14 @@ export class Initdb {
               }
             }
 
+            //Execute-SQLの処理、configのfileに定義されているSQLを実行する
             if (iterator.action === 'Execute-SQL' && iterator.file) {
               try {
-                const sqlPath = path.normalize(path.join(settings.workspace, iterator.file)).replace(/\\/g, "/")
+                const sqlPath = instance.normalizePath(iterator.file,config.workspace)
                 const sql = fs.readFileSync(sqlPath, "utf8");
                 try {
                   const results = db.exec(sql)
-                  instance.resultsprocessor(results)
+                  instance.resultsPrint(results)
                 } catch (e) {
                   if (instance.debug) {
                     console.error(e.message, sql, iterator);
@@ -83,27 +99,34 @@ export class Initdb {
               }
             }
 
+            //Export-CSVの処理、configのsqlに定義されているSQLを実行し結果をfileに書き出す
             if (iterator.action === 'Export-CSV' && iterator.sql && iterator.file) {
-              const dataPath = path.normalize(path.join(settings.workspace, iterator.file)).replace(/\\/g, "/")
-              const writeStream = fs.createWriteStream(dataPath, "utf8")
-              const readableStream = new Stream.Readable({ objectMode: true })
               try {
+                const dataPath = instance.normalizePath(iterator.file,config.workspace)
+                const writeStream = fs.createWriteStream(dataPath, "utf8")
+                const readStream = new Stream.Readable({ objectMode: true })
+                //prepare作成
                 const stmt = db.prepare(iterator.sql)
-
+                //CSV作成用の設定
                 const resultsStringify = stringify({
                   header: true,
                   columns: stmt.getColumnNames()
                 })
 
-                readableStream.pipe(resultsStringify).pipe(writeStream)
+                readStream.pipe(resultsStringify).pipe(writeStream)
+
+                //書き込み完了時の検知
                 writeStream.on('finish', () => {
                   console.log('Export-CSV: finish write stream', dataPath)
                 }).on('error', (err) => {
                   console.log(err)
                 })
 
-                while (stmt.step()) readableStream.push(stmt.get());
-                readableStream.push(null)
+                //SQLの実行と結果のreadableStreamへの書き込み
+                while (stmt.step()) readStream.push(stmt.get());
+                readStream.push(null)
+                //stmt解放
+                stmt.free()
 
               } catch (e) {
                 if (instance.debug) {
@@ -115,51 +138,59 @@ export class Initdb {
 
             }
 
+            //Import-CSVの処理、configのfileに定義されているcsvを読み込み、sqlに定義されているSQLにbindして実行する
             if (iterator.action === 'Import-CSV' && iterator.file) {
-              const processFile = async () => {
-                const dataPath = path.normalize(path.join(settings.workspace, iterator.file)).replace(/\\/g, "/")
-                const parser = parse({
-                  // CSV options if any
-                  columns: true,
-                  skip_empty_lines: true
-                })
-                const readStream = fs.createReadStream(dataPath, "utf8")
-                readStream.pipe(parser)
-                const stmt = db.prepare(iterator.sql)
-                for await (const record of parser) {
-                  // Work with each record
-                  try {
-                    const mod_values = Object.fromEntries(
-                      Object.entries(record)
-                        //[columnName , value]
-                        //.map(([_, value]) => [_.replace(/[\n\r\s\&]/g, '').replace(/\(.+\)/g, ''), "'" + value.replace(/\'/g, "''").replace(/\r\n/g, "'||char(13, 10)||'").replace(/\n/g, "'||char(13, 10)||'").replace(/\t/g, "'||char(9)||'") + "'"])
-                        //.map(([columnName, value]) => [columnName, value.replace(/\'/g, "''").replace(/\r\n/g, "'||char(13, 10)||'").replace(/\n/g, "'||char(13, 10)||'").replace(/\t/g, "'||char(9)||'")])
-                        .map(([columnName, value]) => ["$" + columnName.replace(/[\n\r\s\&]/g, '').replace(/\(.+\)/g, ''), value.replace(/\'/g, "''").replace(/\r\n/g, "'||char(13, 10)||'").replace(/\n/g, "'||char(13, 10)||'").replace(/\t/g, "'||char(9)||'")])
-                    )
+              try {
+                const processFile = async () => {
+                  const dataPath = instance.normalizePath(iterator.file,config.workspace)
+                  const readStream = fs.createReadStream(dataPath, "utf8")
+
+                  //prepare作成
+                  const stmt = db.prepare(iterator.sql)
+
+                  //CSVの読み込み設定とStream作成
+                  const parserStream = parse({
+                    columns: true, //Columnは必ずあるとする
+                    skip_empty_lines: true //空行はスキップ
+                  })
+
+                  readStream.pipe(parserStream)
+                  //parserStreamにて処理されたrecordを順次処理する
+                  for await (const record of parserStream) {
+                    // Work with each record
                     try {
-                      stmt.bind(mod_values);
-                      while (stmt.step()) console.log("stmt.get", stmt.get());
+                      //CSVデータの加工
+                      //columnNameをBindParamsで利用可能な名称に変更
+                      //valueをSQLで扱えるようにエスケープ処理する
+                      const mod_values = Object.fromEntries(
+                        Object.entries(record)
+                          //[columnName , value]
+                          .map(([columnName, value]) => ["$" + columnName.replace(/[\n\r\s\&]/g, '').replace(/\(.+\)/g, ''), value.replace(/\'/g, "''").replace(/\r\n/g, "'||char(13, 10)||'").replace(/\n/g, "'||char(13, 10)||'").replace(/\t/g, "'||char(9)||'")])
+                      )
+                      try {
+                        //SQLの実行
+                        stmt.bind(mod_values);
+                        //結果の取得、基本INSERTなので結果の処理は適当
+                        while (stmt.step()) console.log("stmt.get", stmt.get());
+                      } catch (e) {
+                        if (instance.debug) {
+                          console.error(e.message, iterator.sql, mod_values, e);
+                        } else {
+                          console.error(e.message, iterator.sql);
+                        }
+                      }
                     } catch (e) {
                       if (instance.debug) {
-                        console.error(e.message, iterator.sql, mod_values, e);
+                        console.error(e.message, record, e);
                       } else {
-                        console.error(e.message, iterator.sql);
+                        console.error(e.message, record);
                       }
                     }
-                  } catch (e) {
-                    if (instance.debug) {
-                      console.error(e.message, record, e);
-                    } else {
-                      console.error(e.message, record);
-                    }
                   }
+                  return
                 }
-                return
-              }
-              try {
                 const ret = await processFile()
-              }
-              catch (e) {
+              } catch (e) {
                 if (instance.debug) {
                   console.error(iterator, e.message, e);
                 } else {

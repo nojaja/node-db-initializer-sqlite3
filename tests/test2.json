@@ -3,7 +3,7 @@
         {
             "action": "Export-CSV",
             "sql": "SELECT * FROM babynames;",
-            "file": "/test.csv"
+            "file": "../test.csv"
         },
         {
             "action": "Execute-SQL",

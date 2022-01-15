@@ -10,12 +10,12 @@
         },
         {
             "action": "Execute-SQL",
-            "file": "/CREATE_TABLE.sql"
+            "file": "CREATE_TABLE.sql"
         },
         {
             "action": "Import-CSV",
             "sql": "INSERT INTO HOGE VALUES ($ProcessIdentifier,$LEVEL,$PARENT,$Process,$Category,$OriginalProcessIdentifier,$ExtendedDescription,'',$BriefDescription,$Domain,$VerticalGroup,$MaturityLevel,$Status)",
-            "file": "/HOGE.csv"
+            "file": "HOGE.csv"
         },
         {
             "action": "Execute-SQL",
@@ -23,7 +23,7 @@
         },
         {
             "action": "Execute-SQL",
-            "file": "/SELECT_TABLE.sql"
+            "file": "SELECT_TABLE.sql"
         }
     ]
 }
