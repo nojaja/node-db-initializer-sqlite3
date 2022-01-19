@@ -30,6 +30,8 @@ jobs:
   nexebuild:
     needs: test
     runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.package-version.outputs.version }}
     steps:
     - uses: actions/checkout@v2
 
@@ -47,6 +49,9 @@ jobs:
       run: |
         cd dist
         zip -r artifacts.zip bin/
+    - name: set package version
+      id: package-version
+      run: node -p -e '`::set-output name=version::${require("./package.json").version}`'
 
     - name: Create release
       id: create_release
@@ -54,8 +59,8 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        tag_name: Release_${{ github.event.pull_request.title }}
-        release_name: Release ${{ github.event.pull_request.title }}
+        tag_name: Release_${{ steps.package-version.outputs.version }}
+        release_name: Release ${{ steps.package-version.outputs.version }}
         body: |
           Changes in this Release
           - First Change
