@@ -1,18 +1,16 @@
 const path = require('path')
-const src = __dirname + "/src"
-const dist = __dirname + "/dist"
-const webpack = require('webpack')
-const CopyFilePlugin = require('copy-webpack-plugin')
-const WriteFilePlugin = require('write-file-webpack-plugin')
+const src = path.resolve(__dirname, 'src');
+const dist = path.resolve(__dirname, 'dist');
+const version = JSON.stringify(require('./package.json').version);
+const CopyPlugin = require('copy-webpack-plugin');
 
 module.exports = {
   mode: process.env.NODE_ENV === 'production' ? 'development' : 'production',
-  devtool: 'source-map',
+  devtool: 'inline-source-map',
   target: 'node',
-  context: src,
   entry: {
-    'initdb': './initdb.js',
-    'index': './index.js'
+    'initdb': './src/initdb.js',
+    'index': './src/index.js'
   },
   output: {
     globalObject: 'this',
@@ -34,12 +32,11 @@ module.exports = {
     }]
   },
   plugins: [
-    new CopyFilePlugin({
+    new CopyPlugin({
       patterns: [
-        { from: '../node_modules/sql.js/dist/sql-wasm.wasm', to: dist },
-        { from: '../node_modules/sql.js/dist/sql-wasm-debug.wasm', to: dist }
+        { from: 'node_modules/sql.js/dist/sql-wasm.wasm', to: dist },
+        { from: 'node_modules/sql.js/dist/sql-wasm-debug.wasm', to: dist }
       ]
-    }),
-    new WriteFilePlugin()
+    })
   ]
-}
+};

@@ -13,41 +13,38 @@ class SQLiteManager {
             //locateFile: filename => `/dist/${filename}`
             //locateFile: file => './sql-wasm.wasm'
         });
-        const sqlite3_instance = new SQLiteManager(sqlite3, data);
-        // sqlite3_instanceにoriginalプロパティを作成
-        sqlite3_instance.original = { db: {} };
-
-        // 元のprepareメソッドを保存
-        sqlite3_instance.original.db.prepare = sqlite3_instance.db.prepare;
-        sqlite3_instance.original.db.exec = sqlite3_instance.db.exec;
-
-        // db.prepareをオーバーライド
-        sqlite3_instance.db.prepare = function (sql) {
-            return sqlite3_instance.prepare(sql);
-        };
-        // db.execをオーバーライド
-        sqlite3_instance.db.exec = function (sql, bind) {
-            return sqlite3_instance.exec(sql, bind);
-        };
+        
+        const sqlite3_instance = new SQLiteManager(sqlite3, options);
+        await sqlite3_instance.setupEnvironment(data);
         return sqlite3_instance;
     }
 
-    constructor(sqlite3, data, options = {}) {
+    constructor(sqlite3, options = {}) {
         this.print = options.print || (() => { });
         this.printErr = options.printErr || (() => { });
         this.sqlite3 = sqlite3;
+        this.original = { db: {} };
+        this.db = null;
+    }
+
+    async setupEnvironment(data) {
         // データベースを作成
-        this.db = new sqlite3.Database(data);
-    }
+        this.db = new this.sqlite3.Database(data);
+        // sqlite3_instanceにoriginalプロパティを作成
+        this.original = { db: {} };
 
-    exec(sql, bind) {
-        // 元のメソッドを呼び出し
-        return this.original.db.exec.call(this.db, sql, bind);
-    }
+        // 元のprepareメソッドを保存
+        this.original.db.prepare = this.db.prepare;
+        this.original.db.exec = this.db.exec;
 
-    prepare(sql) {
-        // 元のメソッドを呼び出し
-        return this.original.db.prepare.call(this.db, sql);
+        // db.prepareをオーバーライド
+        this.db.prepare = (sql) => {
+            return this.original.db.prepare.call(this.db, sql);
+        };
+        // db.execをオーバーライド
+        this.db.exec = (sql, bind) =>{
+            return this.original.db.exec.call(this.db, sql, bind);
+        };
     }
     
     export() {
@@ -57,7 +54,7 @@ class SQLiteManager {
 
     async import(contents) {
         this.db.close();
-        this.db = new this.sqlite3.Database(contents);
+        await this.setupEnvironment(contents);
     }
 
     close() {
