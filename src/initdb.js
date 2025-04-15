@@ -1,10 +1,10 @@
 import * as fs from 'fs'
-import * as Path from 'path'
 import * as Stream from 'stream'
 import SQLiteManager from './SQLiteManager.js'
 import { parse } from 'csv-parse'
 import { stringify } from 'csv-stringify'
 import PathUtil from '@nojaja/pathutil'
+import DataTransformation from './DataTransformation.js'
 
 
 export class Initdb {
@@ -57,6 +57,11 @@ export class Initdb {
       const data = (dbfile_path) ? new Uint8Array(fs.readFileSync(dbfile_path)) : null;
       // SQLite WAMSの初期化
       this.sqliteManager = await SQLiteManager.initialize(data, {
+        print: this.print,
+        printErr: this.printErr
+      });
+
+      this.dataTransformation = await DataTransformation.initialize({
         print: this.print,
         printErr: this.printErr
       });
@@ -154,6 +159,8 @@ export class Initdb {
                 //prepare作成
                 const stmt = this.sqliteManager.db.prepare(iterator.sql)
 
+                const jsonata = (iterator.jsonata) ? this.dataTransformation.prepare(iterator.jsonata) : null;
+
                 //CSVの読み込み設定とStream作成
                 const parserStream = parse({
                   columns: true, //Columnは必ずあるとする
@@ -175,8 +182,13 @@ export class Initdb {
                         .map(([columnName, value]) => ["$" + columnName.replace(/[\n\r\s\&]/g, '').replace(/\(.+\)/g, ''), value])
                     ) // -> { '$Process': 'Gather Market Information', '$Category': 'Task',,,}
                     try {
+                      const data = (jsonata) ? await jsonata.evaluate(mod_values) : mod_values; //jsonataの式を実行する
+                      if(instance.debug && jsonata){
+                        this.print("jsonata", mod_values,"->", data);
+                      }
+
                       //SQLの実行
-                      stmt.bind(mod_values);
+                      stmt.bind(data);
                       //結果の取得、基本INSERTなので結果の処理は適当
                       while (stmt.step()) console.log("stmt.get", stmt.get());
                     } catch (e) {
