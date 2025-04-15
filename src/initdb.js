@@ -167,7 +167,7 @@ export class Initdb {
                           //[columnName , value]
                           //.map(([columnName, value]) => ["$" + columnName.replace(/[\n\r\s\&]/g, '').replace(/\(.+\)/g, ''), value.replace(/\'/g, "''").replace(/\r\n/g, "'||char(13, 10)||'").replace(/\n/g, "'||char(13, 10)||'").replace(/\t/g, "'||char(9)||'")])
                           .map(([columnName, value]) => ["$" + columnName.replace(/[\n\r\s\&]/g, '').replace(/\(.+\)/g, ''), value])
-                      )
+                      ) // -> { '$Process': 'Gather Market Information', '$Category': 'Task',,,}
                       try {
                         //SQLの実行
                         stmt.bind(mod_values);
