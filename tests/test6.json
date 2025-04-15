@@ -1,0 +1,18 @@
+{
+    "data": [
+        {
+            "action": "Execute-SQL",
+            "sql": "CREATE TABLE FUGA (ID PRIMARY KEY, LEVEL integer, PARENT , NAME , TYPE , DESCRIPTION , FUNCTION , BRIEF_DESCRIPTION , DOMAIN , CATEGORY);"
+        },
+        {
+            "action": "Import-CSV",
+            "jsonata": "$merge([$, {'$test': $.'$Domain' & '_test'}])",
+            "sql": "INSERT INTO FUGA VALUES ($ProcessIdentifier,$LEVEL,$PARENT,$Process,$Category,$ExtendedDescription,'',$BriefDescription,$Domain,$VerticalGroup)",
+            "file": "HOGE.csv"
+        },
+        {
+            "action": "Execute-SQL",
+            "sql": "SELECT * FROM FUGA;"
+        }
+    ]
+}
