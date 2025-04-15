@@ -55,7 +55,11 @@ const main = async () => {
     configdata.workspace = path.dirname(configPath);
     if (options.debug) console.log(`config data - ${configdata}`);
 
-    const initdb = new Initdb(options.debug);
+    const initdb = new Initdb({
+      print: console.log,
+      printErr: console.error,
+      debug: options.debug
+    });
     const content = await initdb.init(configdata, inputDBPath);
     async function save(savedata) {
       fs.writeFileSync(outputDBPath, savedata);
