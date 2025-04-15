@@ -22,20 +22,21 @@
   },
   "homepage": "https://github.com/nojaja/node-db-initializer-sqlite3#readme",
   "dependencies": {
+    "@nojaja/pathutil": "^1.0.3",
     "commander": "^8.3.0",
     "csv-parse": "^5.0.4",
     "csv-stringify": "^6.0.5",
     "sql.js": "^1.6.2"
   },
   "devDependencies": {
-    "webpack": "^5.89.0",
-    "webpack-cli": "^5.1.4",
     "copy-webpack-plugin": "^11.0.0",
-    "nexe": "^4.0.0-beta.19",
     "cross-env": "^7.0.3",
     "file-loader": "^6.2.0",
+    "nexe": "^4.0.0-beta.19",
     "patch-package": "^6.4.7",
     "raw-loader": "^4.0.2",
+    "webpack": "^5.89.0",
+    "webpack-cli": "^5.1.4",
     "write-file-webpack-plugin": "^4.5.1"
   }
 }

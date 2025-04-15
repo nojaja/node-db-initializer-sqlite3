@@ -1,6 +1,7 @@
 const path = require('path')
 const src = path.resolve(__dirname, 'src');
 const dist = path.resolve(__dirname, 'dist');
+const webpack = require('webpack');
 const version = JSON.stringify(require('./package.json').version);
 const CopyPlugin = require('copy-webpack-plugin');
 
@@ -32,6 +33,9 @@ module.exports = {
     }]
   },
   plugins: [
+    new webpack.DefinePlugin({
+        __VERSION__: version
+    }),
     new CopyPlugin({
       patterns: [
         { from: 'node_modules/sql.js/dist/sql-wasm.wasm', to: dist },
