@@ -1,7 +1,7 @@
 import * as fs from 'fs'
 import * as Path from 'path'
 import * as Stream from 'stream'
-import initSqlJs from "sql.js/dist/sql-wasm.js"
+import SQLiteManager from './SQLiteManager.js'
 import { parse } from 'csv-parse'
 import { stringify } from 'csv-stringify'
 
@@ -52,9 +52,13 @@ export class Initdb {
       //各種fileの相対パスの基準となるworkspaceが指定されてない場合はCurrent directoryを設定する
       if (!config.workspace) config.workspace = process.cwd()
 
-      return await initSqlJs().then(async function (SQL) {
-        // Load the db  
-        const db = (dbfile_path) ? new SQL.Database(new Uint8Array(fs.readFileSync(dbfile_path))) : new SQL.Database();
+        // Load db  
+        const data = (dbfile_path) ? new Uint8Array(fs.readFileSync(dbfile_path)) : null;
+        // SQLite WAMSの初期化
+        this.sqliteManager = await SQLiteManager.initialize(data, {
+          print: console.log,
+          printErr: console.error
+        });
 
         //configのdataに定義されている処理を上から順番に実行する
         for await (const iterator of config.data || []) {
@@ -64,7 +68,7 @@ export class Initdb {
             //Execute-SQLの処理、configのdataに定義されているSQLを実行する
             if (iterator.action === 'Execute-SQL' && iterator.sql) {
               try {
-                const results = db.exec(iterator.sql)
+                const results = this.sqliteManager.db.exec(iterator.sql)
                 instance.resultsPrint(results)
               } catch (e) {
                 if (instance.debug) {
@@ -81,7 +85,7 @@ export class Initdb {
                 const sqlPath = instance.normalizePath(iterator.file,config.workspace)
                 const sql = fs.readFileSync(sqlPath, "utf8");
                 try {
-                  const results = db.exec(sql)
+                  const results = this.sqliteManager.db.exec(sql)
                   instance.resultsPrint(results)
                 } catch (e) {
                   if (instance.debug) {
@@ -106,7 +110,7 @@ export class Initdb {
                 const writeStream = fs.createWriteStream(dataPath, "utf8")
                 const readStream = new Stream.Readable({ objectMode: true })
                 //prepare作成
-                const stmt = db.prepare(iterator.sql)
+                const stmt = this.sqliteManager.db.prepare(iterator.sql)
                 //CSV作成用の設定
                 const resultsStringify = stringify({
                   header: true,
@@ -146,7 +150,7 @@ export class Initdb {
                   const readStream = fs.createReadStream(dataPath, "utf8")
 
                   //prepare作成
-                  const stmt = db.prepare(iterator.sql)
+                  const stmt = this.sqliteManager.db.prepare(iterator.sql)
 
                   //CSVの読み込み設定とStream作成
                   const parserStream = parse({
@@ -208,9 +212,8 @@ export class Initdb {
             }
           }
         }
-        const content = db.export();
+        const content = await this.sqliteManager.export();
         return content;
-      })
 
     } catch (e) {
       if (instance.debug) {
