@@ -7,9 +7,9 @@
     "db-initializer-sqlite3": "dist/index.bundle.js"
   },
   "scripts": {
-    "build": "cross-env NODE_OPTIONS=--max_old_space_size=2048 NODE_ENV=production ENVIRONMENT=node patch-package && webpack",
-    "nexebuild": "cross-env NODE_OPTIONS=--max_old_space_size=2048 NODE_ENV=production ENVIRONMENT=node patch-package && webpack && node ./nexe.build.js",
-    "test": "cross-env NODE_OPTIONS=--max_old_space_size=2048 NODE_ENV=development ENVIRONMENT=node patch-package && webpack && node ./nexe.build.js && node --trace-warnings dist/index.bundle.js -c /tests/test.json -o test.db"
+    "build": "cross-env NODE_OPTIONS=--max_old_space_size=2048 NODE_ENV=production ENVIRONMENT=node webpack",
+    "nexebuild": "cross-env NODE_OPTIONS=--max_old_space_size=2048 NODE_ENV=production ENVIRONMENT=node webpack && node ./nexe.build.js",
+    "test": "cross-env NODE_OPTIONS=--max_old_space_size=2048 NODE_ENV=development ENVIRONMENT=node webpack && node ./nexe.build.js && node --trace-warnings dist/index.bundle.js -c /tests/test.json -o test.db"
   },
   "repository": {
     "type": "git",
@@ -26,14 +26,13 @@
     "commander": "^8.3.0",
     "csv-parse": "^5.0.4",
     "csv-stringify": "^6.0.5",
-    "sql.js": "^1.6.2",
+    "@sqlite.org/sqlite-wasm": "^3.49.1-build4",
     "jsonata": "^2.0.6"
   },
   "devDependencies": {
     "copy-webpack-plugin": "^11.0.0",
     "cross-env": "^7.0.3",
     "nexe": "^4.0.0-rc.1",
-    "patch-package": "^6.4.7",
     "webpack": "^5.89.0",
     "webpack-cli": "^5.1.4"
   }
