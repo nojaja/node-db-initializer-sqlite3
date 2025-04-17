@@ -5,6 +5,10 @@ import { parse } from 'csv-parse'
 import { stringify } from 'csv-stringify'
 import PathUtil from '@nojaja/pathutil'
 import DataTransformation from './DataTransformation.js'
+import * as sourceMapSupport from 'source-map-support'
+
+//デバッグ用のsourceMap設定
+sourceMapSupport.install();
 
 
 export class Initdb {
@@ -57,8 +61,8 @@ export class Initdb {
       const data = (dbfile_path) ? new Uint8Array(fs.readFileSync(dbfile_path)) : null;
       // SQLite WAMSの初期化
       this.sqliteManager = await SQLiteManager.initialize(data, {
-        print: this.print,
-        printErr: this.printErr
+        print: (this.debug)? this.print :null,
+        printErr: (this.debug)? this.printErr :null
       });
 
       this.dataTransformation = await DataTransformation.initialize({

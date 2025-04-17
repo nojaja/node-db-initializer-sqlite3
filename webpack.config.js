@@ -1,4 +1,4 @@
-const path = require('path')
+const path = require('path');
 const src = path.resolve(__dirname, 'src');
 const dist = path.resolve(__dirname, 'dist');
 const webpack = require('webpack');
@@ -14,7 +14,6 @@ module.exports = {
     'index': './src/index.js'
   },
   output: {
-    globalObject: 'this',
     filename: './[name].bundle.js',
     sourceMapFilename: './map/[id].[chunkhash].js.map',
     chunkFilename: './chunk/[id].[chunkhash].js',
@@ -22,15 +21,6 @@ module.exports = {
     libraryExport: 'default',
     libraryTarget: 'umd',
     path: dist
-  },
-  module: {
-    rules: [{
-      test: /\.dat$/,
-      use: ['raw-loader']
-    }, {
-      test: /\.wasm$/,
-      use: ['raw-loader']
-    }]
   },
   plugins: [
     new webpack.DefinePlugin({
