@@ -1,4 +1,8 @@
 import jsonata from "jsonata";
+import * as sourceMapSupport from 'source-map-support'
+
+//デバッグ用のsourceMap設定
+sourceMapSupport.install();
 
 
 class DataTransformation {
