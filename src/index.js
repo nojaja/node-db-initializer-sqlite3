@@ -68,6 +68,9 @@ const main = async () => {
     async function save(savedata) {
       fs.writeFileSync(outputDBPath, savedata);
     }
+    if (content == null) {
+      throw new Error('保存するデータがありません');
+    }
     await save(content);
 
   } catch (error) {

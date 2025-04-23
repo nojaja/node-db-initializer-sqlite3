@@ -1,0 +1,18 @@
+{
+    "data": [
+        {
+            "action": "Execute-SQL",
+            "sql": "CREATE VIRTUAL TABLE IF NOT EXISTS vectors USING vec0(embedding float[1024],contents TEXT)"
+        },
+        {
+            "action": "Import-CSV",
+            "jsonata": "$merge([$, {'$embedding': $generateEmbedding($.'$ExtendedDescription')}])",
+            "sql": "INSERT INTO vectors(embedding, contents) VALUES ($embedding, $ProcessIdentifier)",
+            "file": "HOGE.csv"
+        },
+        {
+            "action": "Execute-SQL",
+            "sql": "SELECT * FROM vectors;"
+        }
+    ]
+}

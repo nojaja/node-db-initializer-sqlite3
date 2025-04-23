@@ -5,7 +5,16 @@ import { parse } from 'csv-parse'
 import { stringify } from 'csv-stringify'
 import PathUtil from '@nojaja/pathutil'
 import DataTransformation from './DataTransformation.js'
+import EmbeddingManager from './EmbeddingManager.js'
 import * as sourceMapSupport from 'source-map-support'
+import { randomFillSync } from 'crypto';
+
+// Polyfill crypto.getRandomValues for JSONata's randomDevice
+if (!globalThis.crypto) {
+  globalThis.crypto = { getRandomValues: randomFillSync };
+} else if (typeof globalThis.crypto.getRandomValues !== 'function') {
+  globalThis.crypto.getRandomValues = randomFillSync;
+}
 
 //デバッグ用のsourceMap設定
 sourceMapSupport.install();
@@ -20,6 +29,14 @@ export class Initdb {
     this.print = options.print || (() => { });
     this.printErr = options.printErr || (() => { });
     this.debug = options.debug || false
+  }
+
+  /** normalize a path relative to base (default cwd) */
+  normalizePath(p, base = process.cwd()) {
+    // Resolve path relative to base (default cwd)
+    const absPath = PathUtil.normalizeSeparator(PathUtil.absolutePath(p, base));
+    if (fs.existsSync(absPath)) return absPath;
+    return null;
   }
 
   /**
@@ -58,7 +75,12 @@ export class Initdb {
       if (!config.workspace) config.workspace = process.cwd()
 
       // Load db  
-      const data = (dbfile_path) ? new Uint8Array(fs.readFileSync(dbfile_path)) : null;
+      let data = null;
+      if (dbfile_path && fs.existsSync(dbfile_path)) {
+        data = new Uint8Array(fs.readFileSync(dbfile_path));
+      } else {
+        data = new Uint8Array(); // 空データを渡す
+      }
       // SQLite WAMSの初期化
       this.sqliteManager = await SQLiteManager.initialize(data, {
         print: (this.debug)? this.print :null,
@@ -69,6 +91,20 @@ export class Initdb {
         print: this.print,
         printErr: this.printErr
       });
+      // Initialize EmbeddingManager (always include embeddings)
+      this.embeddingManager = await EmbeddingManager.initialize({
+        print: this.print,
+        printErr: this.printErr,
+      });
+      // Register generateEmbedding for JSONata
+      this.dataTransformation.registerFunction(
+        'generateEmbedding',
+        async (text) => {
+          return await this.embeddingManager.generateEmbedding(text);
+        },
+        '<s>'
+      );
+  
 
       //configのdataに定義されている処理を上から順番に実行する
       for await (const iterator of config.data || []) {
@@ -191,7 +227,13 @@ export class Initdb {
                         this.print("jsonata", mod_values,"->", data);
                       }
 
-                      //SQLの実行
+                      // Ensure embedding vector has correct size (1024 floats). Fallback to zero vector if missing or zero-length.
+                      if (data.hasOwnProperty('$embedding') && data.$embedding instanceof ArrayBuffer) {
+                        if (data.$embedding.byteLength !== 1024 * 4) {
+                          this.printErr('Embedding length invalid; using zero vector instead.');
+                          data.$embedding = new Float32Array(1024).buffer;
+                        }
+                      }
                       stmt.bind(data);
                       //結果の取得、基本INSERTなので結果の処理は適当
                       while (stmt.step()) console.log("stmt.get", stmt.get());
