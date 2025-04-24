@@ -10,7 +10,6 @@ import * as sourceMapSupport from 'source-map-support'
 //デバッグ用のsourceMap設定
 sourceMapSupport.install();
 
-
 export class Initdb {
   /**
    * constructor
@@ -58,11 +57,16 @@ export class Initdb {
       if (!config.workspace) config.workspace = process.cwd()
 
       // Load db  
-      const data = (dbfile_path) ? new Uint8Array(fs.readFileSync(dbfile_path)) : null;
+      let data = null;
+      if (dbfile_path && fs.existsSync(dbfile_path)) {
+        data = new Uint8Array(fs.readFileSync(dbfile_path));
+      } else {
+        data = new Uint8Array(); // 空データを渡す
+      }
       // SQLite WAMSの初期化
       this.sqliteManager = await SQLiteManager.initialize(data, {
-        print: (this.debug)? this.print :null,
-        printErr: (this.debug)? this.printErr :null
+        print: (this.debug) ? this.print : null,
+        printErr: (this.debug) ? this.printErr : null
       });
 
       this.dataTransformation = await DataTransformation.initialize({
@@ -187,8 +191,8 @@ export class Initdb {
                     ) // -> { '$Process': 'Gather Market Information', '$Category': 'Task',,,}
                     try {
                       const data = (jsonata) ? await jsonata.evaluate(mod_values) : mod_values; //jsonataの式を実行する
-                      if(instance.debug && jsonata){
-                        this.print("jsonata", mod_values,"->", data);
+                      if (instance.debug && jsonata) {
+                        this.print("jsonata", mod_values, "->", data);
                       }
 
                       //SQLの実行

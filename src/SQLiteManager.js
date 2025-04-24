@@ -1,14 +1,44 @@
 // SQLite モジュールをインポート
 import { default as init } from '@sqlite.org/sqlite-wasm';
+import * as sourceMapSupport from 'source-map-support'
+import fs from 'fs';
+import path from 'path';
+
+//デバッグ用のsourceMap設定
+sourceMapSupport.install();
 
 class SQLiteManager {
     static async initialize(data, options) {
         // SQLite モジュールを初期化
-        const sqlite3 = await init({
-            print: options.print || (() => { }),
-            printErr: options.printErr || (() => { })
-        });
-        
+        // Ensure global.window is set to simulate browser environment for wasm
+        if (typeof window === 'undefined') global.window = {};
+        // Dynamically import sqlite3 wasm module on first call
+        let sqlite3 = null;
+        if (typeof process !== 'undefined') { // node.js環境
+            // Load sqlite3.wasm from dist or pkg output directory
+            const isPkg = process.pkg !== undefined;
+            const wasmPath = isPkg
+                ? path.join(path.dirname(process.execPath), 'sqlite3.wasm')
+                : path.join(process.cwd(), 'dist', 'sqlite3.wasm');
+            const wasmBinary = fs.readFileSync(wasmPath);
+            // Initialize wasm module
+            sqlite3 = await init({
+                print: options.print || (() => { }),
+                printErr: options.printErr || (() => { }),
+                wasmBinary,
+                instantiateWasm: (imports, successCallback) => {
+                    WebAssembly.instantiate(wasmBinary, imports)
+                        .then(({ instance, module }) => successCallback(instance, module));
+                    return {};
+                }
+            });
+        } else { // ブラウザ環境
+            sqlite3 = await init({
+                print: options.print || (() => { }),
+                printErr: options.printErr || (() => { })
+            });
+        }
+
         const sqlite3_instance = new SQLiteManager(sqlite3, options);
         await sqlite3_instance.setupEnvironment(data);
         return sqlite3_instance;
@@ -25,7 +55,7 @@ class SQLiteManager {
     async setupEnvironment(data) {
         // ファイル名生成
         this.currentFilename = "dbfile_" + (0xffffffff * Math.random() >>> 0);
-        if (data) {
+        if (data && data.length) {
             // VFSを使用してデータをインポート
             this.sqlite3.capi.sqlite3_js_vfs_create_file(
                 'unix',
@@ -80,7 +110,7 @@ class SQLiteManager {
             }
         };
     }
-    
+
     // ヘルパーメソッド：行データをオブジェクトとして取得
     getRowAsObject(stmt) {
         const obj = {};

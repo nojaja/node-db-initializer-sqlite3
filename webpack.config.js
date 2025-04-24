@@ -2,6 +2,7 @@ const path = require('path');
 const src = path.resolve(__dirname, 'src');
 const dist = path.resolve(__dirname, 'dist');
 const webpack = require('webpack');
+const CopyPlugin = require('copy-webpack-plugin');
 const version = JSON.stringify(require('./package.json').version);
 
 module.exports = {
@@ -21,9 +22,17 @@ module.exports = {
     libraryTarget: 'umd',
     path: dist
   },
+  optimization: {
+    splitChunks: false
+  },
   plugins: [
     new webpack.DefinePlugin({
-        __VERSION__: version
+      __VERSION__: version
+    }),
+    new CopyPlugin({
+      patterns: [
+        { from: path.resolve(__dirname, 'node_modules/@sqlite.org/sqlite-wasm/sqlite-wasm/jswasm/sqlite3.wasm'), to: 'sqlite3.wasm', noErrorOnMissing: false }
+      ]
     })
   ]
 };
