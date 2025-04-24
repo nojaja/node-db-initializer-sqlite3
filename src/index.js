@@ -3,6 +3,10 @@ import * as fs from 'fs'
 import { Command } from 'commander'
 import PathUtil from '@nojaja/pathutil'
 import Initdb from './initdb.js'
+import * as sourceMapSupport from 'source-map-support'
+
+//デバッグ用のsourceMap設定
+sourceMapSupport.install();
 
 /*起動パラメータ設定 */
 const version = (typeof __VERSION__) !== 'undefined' ? __VERSION__ : 'dev'; //__VERSION__はビルド時にwebpackのDefinePluginによって書き換えられます。
@@ -63,6 +67,9 @@ const main = async () => {
     const content = await initdb.init(configdata, inputDBPath);
     async function save(savedata) {
       fs.writeFileSync(outputDBPath, savedata);
+    }
+    if (content == null) {
+      throw new Error('保存するデータがありません');
     }
     await save(content);
 
