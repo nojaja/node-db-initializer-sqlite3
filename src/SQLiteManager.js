@@ -19,7 +19,8 @@ class SQLiteManager {
       const isPkg = process.pkg !== undefined;
       const wasmPath = isPkg
         ? path.join(path.dirname(process.execPath), 'sqlite3.wasm')
-        : path.join(process.cwd(), 'dist', 'sqlite3.wasm');
+        : path.join(__dirname, 'sqlite3.wasm');
+        //path.join(process.cwd(), 'dist', 'sqlite3.wasm');
       const wasmBinary = fs.readFileSync(wasmPath);
       // Initialize wasm module
       sqlite3 = await init({
