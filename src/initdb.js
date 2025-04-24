@@ -5,11 +5,11 @@ import { parse } from 'csv-parse'
 import { stringify } from 'csv-stringify'
 import PathUtil from '@nojaja/pathutil'
 import DataTransformation from './DataTransformation.js'
+import EmbeddingManager from './EmbeddingManager.js'
 import * as sourceMapSupport from 'source-map-support'
 
 //デバッグ用のsourceMap設定
 sourceMapSupport.install();
-
 
 export class Initdb {
   /**
@@ -58,17 +58,39 @@ export class Initdb {
       if (!config.workspace) config.workspace = process.cwd()
 
       // Load db  
-      const data = (dbfile_path) ? new Uint8Array(fs.readFileSync(dbfile_path)) : null;
+      let data = null;
+      if (dbfile_path && fs.existsSync(dbfile_path)) {
+        data = new Uint8Array(fs.readFileSync(dbfile_path));
+      } else {
+        data = new Uint8Array(); // 空データを渡す
+      }
       // SQLite WAMSの初期化
       this.sqliteManager = await SQLiteManager.initialize(data, {
-        print: (this.debug)? this.print :null,
-        printErr: (this.debug)? this.printErr :null
+        print: (this.debug) ? this.print : null,
+        printErr: (this.debug) ? this.printErr : null
       });
 
       this.dataTransformation = await DataTransformation.initialize({
         print: this.print,
         printErr: this.printErr
       });
+      if (config && config.config && config.config.Embedding) {
+        // Initialize EmbeddingManager (always include embeddings)
+        this.embeddingManager = await EmbeddingManager.initialize({
+          print: this.print,
+          printErr: this.printErr,
+          Embedding: config.config.Embedding
+        });
+        // Register generateEmbedding for JSONata
+        this.dataTransformation.registerFunction(
+          'generateEmbedding',
+          async (text) => {
+            return await this.embeddingManager.generateEmbedding(text);
+          },
+          '<s>'
+        );
+      };
+
 
       //configのdataに定義されている処理を上から順番に実行する
       for await (const iterator of config.data || []) {
@@ -187,8 +209,8 @@ export class Initdb {
                     ) // -> { '$Process': 'Gather Market Information', '$Category': 'Task',,,}
                     try {
                       const data = (jsonata) ? await jsonata.evaluate(mod_values) : mod_values; //jsonataの式を実行する
-                      if(instance.debug && jsonata){
-                        this.print("jsonata", mod_values,"->", data);
+                      if (instance.debug && jsonata) {
+                        this.print("jsonata", mod_values, "->", data);
                       }
 
                       //SQLの実行

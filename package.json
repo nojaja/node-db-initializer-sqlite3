@@ -2,14 +2,19 @@
   "name": "db-initializer-sqlite3",
   "version": "1.0.4",
   "description": "Initialize DB schema and tables very quickly. and Available with the webpack plugin.",
-  "main": "src/js/index.js",
+  "main": "dist/initdb.bundle.js",
   "bin": {
     "db-initializer-sqlite3": "dist/index.bundle.js"
   },
+  "files": [
+    "dist"
+  ],
   "scripts": {
-    "build": "cross-env NODE_OPTIONS=--max_old_space_size=2048 NODE_ENV=production ENVIRONMENT=node patch-package && webpack",
-    "nexebuild": "cross-env NODE_OPTIONS=--max_old_space_size=2048 NODE_ENV=production ENVIRONMENT=node patch-package && webpack && node ./nexe.build.js",
-    "test": "cross-env NODE_OPTIONS=--max_old_space_size=2048 NODE_ENV=development ENVIRONMENT=node patch-package && webpack && node ./nexe.build.js && node --trace-warnings dist/index.bundle.js -c /tests/test.json -o test.db"
+    "build": "cross-env NODE_OPTIONS=--max_old_space_size=2048 NODE_ENV=production ENVIRONMENT=node webpack",
+    "nexebuild": "cross-env NODE_OPTIONS=--max_old_space_size=2048 NODE_ENV=production ENVIRONMENT=node webpack && node ./nexe.build.js",
+    "test": "cross-env NODE_OPTIONS=--max_old_space_size=2048 NODE_ENV=development ENVIRONMENT=node webpack && node ./nexe.build.js && node --trace-warnings dist/index.bundle.js -c ./tests/test.json -o test.db",
+    "start": "cross-env NODE_OPTIONS=--max_old_space_size=2048 NODE_ENV=development ENVIRONMENT=node node dist/index.bundle.js -c ./tests/test7.json -o test.db -d",
+    "build:exe": "cross-env NODE_OPTIONS=--max_old_space_size=2048 NODE_ENV=development ENVIRONMENT=node npm run build && pkg . --out-path dist"
   },
   "repository": {
     "type": "git",
@@ -22,19 +27,36 @@
   },
   "homepage": "https://github.com/nojaja/node-db-initializer-sqlite3#readme",
   "dependencies": {
-    "@nojaja/pathutil": "^1.0.3",
+    "@nojaja/pathutil": "^1.0.5",
+    "@xenova/transformers": "^2.17.2",
+    "buffer": "^6.0.3",
     "commander": "^8.3.0",
     "csv-parse": "^5.0.4",
     "csv-stringify": "^6.0.5",
-    "sql.js": "^1.6.2",
-    "jsonata": "^2.0.6"
+    "sqlite-vec-wasm-demo": "^0.1.7-alpha.2",
+    "jsonata": "^2.0.6",
+    "node-fetch": "^2.7.0",
+    "onnxruntime-web": "^1.14.0",
+    "process": "^0.11.10"
   },
   "devDependencies": {
     "copy-webpack-plugin": "^11.0.0",
     "cross-env": "^7.0.3",
-    "nexe": "^4.0.0-rc.1",
-    "patch-package": "^6.4.7",
+    "ignore-loader": "^0.1.2",
+    "node-loader": "^2.1.0",
+    "pkg": "^5.8.1",
+    "string-replace-loader": "^3.1.0",
     "webpack": "^5.89.0",
-    "webpack-cli": "^5.1.4"
+    "webpack-cli": "^5.1.4",
+    "webpack-node-externals": "^3.0.0"
+  },
+  "pkg": {
+    "assets": [
+      "dist/*.wasm",
+      "dist/models_cache/**/*"
+    ],
+    "targets": [
+      "node18-win-x64"
+    ]
   }
 }
