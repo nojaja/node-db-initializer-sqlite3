@@ -7,18 +7,9 @@ import PathUtil from '@nojaja/pathutil'
 import DataTransformation from './DataTransformation.js'
 import EmbeddingManager from './EmbeddingManager.js'
 import * as sourceMapSupport from 'source-map-support'
-import { randomFillSync } from 'crypto';
-
-// Polyfill crypto.getRandomValues for JSONata's randomDevice
-if (!globalThis.crypto) {
-  globalThis.crypto = { getRandomValues: randomFillSync };
-} else if (typeof globalThis.crypto.getRandomValues !== 'function') {
-  globalThis.crypto.getRandomValues = randomFillSync;
-}
 
 //デバッグ用のsourceMap設定
 sourceMapSupport.install();
-
 
 export class Initdb {
   /**
@@ -29,14 +20,6 @@ export class Initdb {
     this.print = options.print || (() => { });
     this.printErr = options.printErr || (() => { });
     this.debug = options.debug || false
-  }
-
-  /** normalize a path relative to base (default cwd) */
-  normalizePath(p, base = process.cwd()) {
-    // Resolve path relative to base (default cwd)
-    const absPath = PathUtil.normalizeSeparator(PathUtil.absolutePath(p, base));
-    if (fs.existsSync(absPath)) return absPath;
-    return null;
   }
 
   /**
@@ -83,28 +66,31 @@ export class Initdb {
       }
       // SQLite WAMSの初期化
       this.sqliteManager = await SQLiteManager.initialize(data, {
-        print: (this.debug)? this.print :null,
-        printErr: (this.debug)? this.printErr :null
+        print: (this.debug) ? this.print : null,
+        printErr: (this.debug) ? this.printErr : null
       });
 
       this.dataTransformation = await DataTransformation.initialize({
         print: this.print,
         printErr: this.printErr
       });
-      // Initialize EmbeddingManager (always include embeddings)
-      this.embeddingManager = await EmbeddingManager.initialize({
-        print: this.print,
-        printErr: this.printErr,
-      });
-      // Register generateEmbedding for JSONata
-      this.dataTransformation.registerFunction(
-        'generateEmbedding',
-        async (text) => {
-          return await this.embeddingManager.generateEmbedding(text);
-        },
-        '<s>'
-      );
-  
+      if (config && config.config && config.config.Embedding) {
+        // Initialize EmbeddingManager (always include embeddings)
+        this.embeddingManager = await EmbeddingManager.initialize({
+          print: this.print,
+          printErr: this.printErr,
+          Embedding: config.config.Embedding
+        });
+        // Register generateEmbedding for JSONata
+        this.dataTransformation.registerFunction(
+          'generateEmbedding',
+          async (text) => {
+            return await this.embeddingManager.generateEmbedding(text);
+          },
+          '<s>'
+        );
+      };
+
 
       //configのdataに定義されている処理を上から順番に実行する
       for await (const iterator of config.data || []) {
@@ -223,17 +209,11 @@ export class Initdb {
                     ) // -> { '$Process': 'Gather Market Information', '$Category': 'Task',,,}
                     try {
                       const data = (jsonata) ? await jsonata.evaluate(mod_values) : mod_values; //jsonataの式を実行する
-                      if(instance.debug && jsonata){
-                        this.print("jsonata", mod_values,"->", data);
+                      if (instance.debug && jsonata) {
+                        this.print("jsonata", mod_values, "->", data);
                       }
 
-                      // Ensure embedding vector has correct size (1024 floats). Fallback to zero vector if missing or zero-length.
-                      if (data.hasOwnProperty('$embedding') && data.$embedding instanceof ArrayBuffer) {
-                        if (data.$embedding.byteLength !== 1024 * 4) {
-                          this.printErr('Embedding length invalid; using zero vector instead.');
-                          data.$embedding = new Float32Array(1024).buffer;
-                        }
-                      }
+                      //SQLの実行
                       stmt.bind(data);
                       //結果の取得、基本INSERTなので結果の処理は適当
                       while (stmt.step()) console.log("stmt.get", stmt.get());

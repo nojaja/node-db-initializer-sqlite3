@@ -14,5 +14,14 @@
             "action": "Execute-SQL",
             "sql": "SELECT * FROM vectors;"
         }
-    ]
+    ],
+    "config": {
+        "Embedding": {
+            "model": "Xenova/multilingual-e5-large",
+            "option": {
+                "pooling": "mean",
+                "normalize": true
+            }
+        }
+    }
 }

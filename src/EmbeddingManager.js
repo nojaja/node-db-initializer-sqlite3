@@ -2,25 +2,6 @@ import * as sourceMapSupport from 'source-map-support'
 
 //デバッグ用のsourceMap設定
 sourceMapSupport.install();
-// Polyfill fetch for remote model loading in Node
-import fetch from 'node-fetch';
-if (typeof globalThis.fetch !== 'function') globalThis.fetch = fetch;
-
-// Polyfill global objects for UMD transformers build in Node
-if (typeof self === 'undefined') global.self = global;
-if (typeof window === 'undefined') global.window = global;
-
-// Polyfills and env settings for transformers.js (sample01 style)
-import nodeFetch from 'node-fetch';
-// Fetch API
-if (typeof globalThis.fetch !== 'function') globalThis.fetch = nodeFetch;
-global.Headers = nodeFetch.Headers;
-global.Request = nodeFetch.Request;
-global.Response = nodeFetch.Response;
-
-const EmbeddingModel = 'Xenova/multilingual-e5-large'; //600MB
-//const EmbeddingModel = 'intfloat/multilingual-e5-large'; //2.24GB
-//const EmbeddingModel = 'cl-nagoya/ruri-large-v3'; //337MB
 
 class EmbeddingManager {
     // シングルトンインスタンスを保持する静的プロパティ
@@ -35,6 +16,10 @@ class EmbeddingManager {
         }
         this.print = options.print || (() => { });
         this.printErr = options.printErr || (() => { });
+        this.model = (options && options.Embedding && options.Embedding.model) ? options.Embedding.model : 'Xenova/multilingual-e5-large'; //600MB
+        //const EmbeddingModel = 'intfloat/multilingual-e5-large'; //2.24GB
+        //const EmbeddingModel = 'cl-nagoya/ruri-large-v3'; //337MB
+        this.option = (options && options.Embedding && options.Embedding.option) ? options.Embedding.option : { pooling: 'mean', normalize: true };
         // このインスタンスを唯一のインスタンスとして設定
         EmbeddingManager.#instance = this;
     }
@@ -45,18 +30,18 @@ class EmbeddingManager {
      * @returns {Promise<EmbeddingManager>} 初期化されたEmbeddingManagerインスタンス
      */
     static async initialize(options) {
-        // Create and initialize singleton if needed
+        // インスタンスが未作成の場合は作成して初期化
         if (!EmbeddingManager.#instance) {
             const instance = new EmbeddingManager(options);
             try {
-                await instance.setupEmbeddingEnvironment();
+                await instance.setupEmbeddingEnvironment(options);
             } catch (e) {
-                // Fallback stub: returns zero vector
                 instance.printErr('EmbeddingManager 初期化エラー; ' + e.message);
                 throw e;
             }
             return instance;
         }
+        // 既存のインスタンスが存在する場合はそれを返す
         return EmbeddingManager.#instance;
     }
 
@@ -64,9 +49,9 @@ class EmbeddingManager {
      * 埋め込み環境のセットアップ
      * @returns {Promise<void>}
      */
-    async setupEmbeddingEnvironment() {
+    async setupEmbeddingEnvironment(options) {
         this.print('Embeddingパイプラインを初期化中...');
-        this.print('Embedding Model:' + EmbeddingModel + 'を取得中...');
+        this.print('Embedding Model:' + this.model + 'を取得中...');
         // Load transformers synchronously with error handling
         let pipeline, env;
         try {
@@ -78,21 +63,25 @@ class EmbeddingManager {
             this.printErr('Transformers モジュールの読み込みに失敗; ' + e.message);
             throw e;
         }
-        // Configure environment for local model loading (embedded in pkg assets)
-        if (env) {
-            const path = require('path');
-            // models_cache directory side-by-side with bundle, included via pkg assets
-            const srcModels = path.resolve(path.dirname(__filename), '../models_cache');
-            env.cacheDir = srcModels;
-            env.allowLocalModels = true;
-            env.useBrowserCache = false;
-            if (env.backends && env.backends.onnx && env.backends.onnx.wasm) {
-                env.backends.onnx.wasm.wasmPaths = srcModels;
+
+        if (typeof process !== 'undefined') { // node.js環境
+            // Configure environment for local model loading (embedded in pkg assets)
+            if (env) {
+                const path = require('path');
+                // models_cache directory side-by-side with bundle, included via pkg assets
+                const srcModels = path.resolve(path.dirname(__filename), '../models_cache');
+                env.cacheDir = srcModels;
+                env.allowLocalModels = true;
+                env.useBrowserCache = false;
+                if (env.backends && env.backends.onnx && env.backends.onnx.wasm) {
+                    env.backends.onnx.wasm.wasmPaths = srcModels;
+                }
             }
         }
         // Initialize embedding pipeline using local model cache
         try {
-            this.embeddingPipeline = await pipeline('feature-extraction', EmbeddingModel, {device: 'webgpu'});
+            // Embeddingパイプラインの初期化
+            this.embeddingPipeline = await pipeline('feature-extraction', this.model);
             this.print('Embeddingパイプラインの初期化が完了しました');
         } catch (e) {
             this.printErr('Embeddingパイプラインの初期化に失敗しました: ' + e.message);
@@ -106,7 +95,7 @@ class EmbeddingManager {
      * @returns {Promise<Float32Array>} 埋め込みベクトル
      */
     async generateEmbedding(text) {
-        const output = await this.embeddingPipeline(text, { pooling: 'mean', normalize: true });
+        const output = await this.embeddingPipeline(text, this.option);
         //return new Float32Array(Array.from(output.data));
         return new Float32Array(output.data).buffer;
     }
