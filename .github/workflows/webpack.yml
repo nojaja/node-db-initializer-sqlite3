@@ -48,7 +48,7 @@ jobs:
     - name: Zip artifacts
       run: |
         cd dist
-        zip -r artifacts.zip bin/
+        zip -r artifacts.zip .
     - name: set package version
       id: package-version
       run: node -p -e '`::set-output name=version::${require("./package.json").version}`'
