@@ -12,7 +12,7 @@ jobs:
 
     strategy:
       matrix:
-        node-version: [18.x]
+        node-version: [18.x, 20.x]
     
     steps:
     - uses: actions/checkout@v4
@@ -35,20 +35,20 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
-    - name: Use Node.js 18.x
-      uses: actions/setup-node@v1
+    - name: Use Node.js 20.x
+      uses: actions/setup-node@v4
       with:
-        node-version: '18.x'
+        node-version: '20.x'
 
     - name: Build
       run: |
         npm ci
-        npm run nexebuild
+        npm run build
         
     - name: Zip artifacts
       run: |
         cd dist
-        zip -r artifacts.zip bin/
+        zip -r artifacts.zip .
     - name: set package version
       id: package-version
       run: node -p -e '`::set-output name=version::${require("./package.json").version}`'
@@ -91,7 +91,7 @@ jobs:
         with:
           node-version: '18.x'
           registry-url: https://registry.npmjs.org/
-      - run: npm install -g npm@latest
+      - run: npm install -g npm@10 || npm install -g npm@latest
       - run: npm ci
       - run: npm run build
       - name: Publish to NPM with Trusted Publishing
