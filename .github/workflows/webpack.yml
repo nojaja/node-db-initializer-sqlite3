@@ -12,13 +12,13 @@ jobs:
 
     strategy:
       matrix:
-        node-version: [12.x, 14.x, 16.x]
+        node-version: [18.x, 20.x]
     
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
 
     - name: Use Node.js ${{ matrix.node-version }}
-      uses: actions/setup-node@v1
+      uses: actions/setup-node@v4
       with:
         node-version: ${{ matrix.node-version }}
 
@@ -33,22 +33,22 @@ jobs:
     outputs:
       version: ${{ steps.package-version.outputs.version }}
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
 
-    - name: Use Node.js 16.x
-      uses: actions/setup-node@v1
+    - name: Use Node.js 20.x
+      uses: actions/setup-node@v4
       with:
-        node-version: '16.x'
+        node-version: '20.x'
 
     - name: Build
       run: |
         npm ci
-        npm run nexebuild
+        npm run build
         
     - name: Zip artifacts
       run: |
         cd dist
-        zip -r artifacts.zip bin/
+        zip -r artifacts.zip .
     - name: set package version
       id: package-version
       run: node -p -e '`::set-output name=version::${require("./package.json").version}`'
@@ -82,14 +82,17 @@ jobs:
   publish-npm:
     needs: test
     runs-on: ubuntu-latest
+    permissions:
+      id-token: write  # OIDC認証に必須
+      contents: read
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-node@v2
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
-          node-version: '16.x'
+          node-version: '20.x'
           registry-url: https://registry.npmjs.org/
+      - run: npm install -g npm@10 || npm install -g npm@latest
       - run: npm ci
       - run: npm run build
-      - run: npm publish
-        env:
-          NODE_AUTH_TOKEN: ${{secrets.npm_token}}
+      - name: Publish to NPM with Trusted Publishing
+        run: npm publish --access public
